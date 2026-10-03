@@ -47,7 +47,7 @@ pkg install -y nodejs python perl git texlab
 Clone the repository (replace the URL with your own):
 
 ```bash
-git clone https://github.com/YOUR-USER/latex-termux-ide.git
+git clone https://github.com/jkestavivo/latex-termux-ide.git
 cd latex-termux-ide
 ```
 
