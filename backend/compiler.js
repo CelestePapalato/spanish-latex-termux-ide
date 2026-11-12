@@ -20,7 +20,7 @@ function kill(child) {
 function runProc(bin, args, cwd, onData, track) {
   return new Promise(resolve => {
     let child;
-    try { child = spawn(bin, args, { cwd, stdio: ['ignore', 'pipe', 'pipe'], detached: process.platform !== 'win32', windowsHide: true, env: process.env }); }
+    try { child = spawn(bin, args, { cwd, stdio: ['ignore', 'pipe', 'pipe'], detached: true, env: process.env }); }
     catch (e) { onData(t('server.compile.startError', { tool: bin, error: e.message }) + '\n'); return resolve({ code: -1 }); }
     track(child);
     child.stdout.setEncoding('utf8'); child.stderr.setEncoding('utf8');
@@ -33,7 +33,7 @@ function runProc(bin, args, cwd, onData, track) {
 
 function execCollect(bin, args, cwd, ms = 10000) {
   return new Promise(resolve => {
-    const c = spawn(bin, args, { cwd, stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
+    const c = spawn(bin, args, { cwd, stdio: ['ignore', 'pipe', 'pipe'] });
     let out = '';
     c.stdout.setEncoding('utf8');
     c.stdout.on('data', d => { out += d; });

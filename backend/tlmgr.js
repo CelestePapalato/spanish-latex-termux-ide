@@ -49,7 +49,7 @@ class Tlmgr {
     const bin = this.path();
     if (!bin) return Promise.reject(new HttpError(503, t('server.tlmgr.notFound')));
     return new Promise((resolve, reject) => {
-      const p = spawn(bin, args, { stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
+      const p = spawn(bin, args, { stdio: ['ignore', 'pipe', 'pipe'] });
       let out = '', timedOut = false;
       const cap = c => { if (out.length < 400000) out += c; };
       p.stdout.on('data', cap); p.stderr.on('data', cap);
@@ -87,7 +87,7 @@ class Tlmgr {
     };
     this.emit({ type: 'tlmgr_started', packages: pkgs });
     push(`$ tlmgr install ${pkgs.join(' ')}\n`);
-    const p = job.proc = spawn(bin, ['install', '--', ...pkgs], { stdio: ['ignore', 'pipe', 'pipe'], windowsHide: true });
+    const p = job.proc = spawn(bin, ['install', '--', ...pkgs], { stdio: ['ignore', 'pipe', 'pipe'] });
     const timer = setTimeout(() => { push('\n' + t('server.tlmgr.installTimeout') + '\n'); p.kill('SIGTERM'); }, 15 * 60 * 1000);
     p.stdout.on('data', c => push(c.toString()));
     p.stderr.on('data', c => push(c.toString()));

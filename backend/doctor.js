@@ -4,16 +4,11 @@ const path = require('path');
 const { t } = require('./i18n');
 
 // Looks a command up in PATH (no shell involved).
-// On Windows, programs end in .exe (pdflatex.exe, texlab.exe...). Only .exe is tried:
-// .bat/.cmd files (e.g. tlmgr.bat) cannot be spawned without a shell, so they are treated as missing.
-const EXTS = process.platform === 'win32' ? ['.exe', ''] : [''];
 function which(cmd) {
   for (const dir of (process.env.PATH || '').split(path.delimiter)) {
     if (!dir) continue;
-    for (const ext of EXTS) {
-      const p = path.join(dir, cmd + ext);
-      try { fs.accessSync(p, fs.constants.X_OK); if (fs.statSync(p).isFile()) return p; } catch {}
-    }
+    const p = path.join(dir, cmd);
+    try { fs.accessSync(p, fs.constants.X_OK); if (fs.statSync(p).isFile()) return p; } catch {}
   }
   return null;
 }

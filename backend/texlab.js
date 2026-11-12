@@ -21,7 +21,7 @@ class TexlabSession {
   start() {
     const bin = which('texlab');
     if (!bin) { this.emit({ type: 'texlab_unavailable', project: this.project, hint: 'pkg install texlab' }); return false; }
-    const proc = this.proc = spawn(bin, [], { cwd: this.root, stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true });
+    const proc = this.proc = spawn(bin, [], { cwd: this.root, stdio: ['pipe', 'pipe', 'pipe'] });
     proc.stdin.on('error', () => {});
     proc.stderr.on('data', () => {});
     proc.stdout.on('data', d => this._onData(d));
