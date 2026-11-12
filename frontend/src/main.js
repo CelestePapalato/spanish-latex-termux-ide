@@ -3,6 +3,7 @@ import { createEditor } from './editor.js';
 import { LspClient } from './lsp.js';
 import { PdfViewer } from './pdfview.js';
 import { $, toast, pickList, showInfo } from './ui.js';
+import { t, getLang } from './i18n.js';
 import { icon, hydrate, fileIcon } from './icons.js';
 
 const TEXT_EXT = /\.(tex|sty|cls|bib|bst|txt|md|def|cfg|ltx|dtx|ins|csv|json|ya?ml|py|sh|clo|fd|tikz|latex)$/i;
@@ -104,12 +105,12 @@ function applyPrefs() {
   document.documentElement.dataset.theme = dark ? 'dark' : 'light';
   editor.setTheme(dark); editor.setFont(prefs.font); editor.setWrap(prefs.wrap);
   $('#m-theme-ico').innerHTML = icon(dark ? 'sun' : 'moon', 18);
-  $('#m-theme-lbl').textContent = dark ? 'Mudar para tema claro' : 'Mudar para tema escuro';
+  $('#m-theme-lbl').textContent = dark ? t('menu.toLight') : t('menu.toDark');
 }
 mqDark.addEventListener('change', () => { if (prefs.theme === 'auto') applyPrefs(); });
 $('#m-theme').onclick = () => { prefs.theme = isDark() ? 'light' : 'dark'; savePrefs(); applyPrefs(); setMenu(false); };
 
-function setStatus(t, cls = '') { const s = $('#status'); s.textContent = t; s.className = 'status ' + cls; }
+function setStatus(text, cls = '') { const s = $('#status'); s.textContent = text; s.className = 'status ' + cls; }
 
 /* ---------- files ---------- */
 const flat = (nodes, out = []) => { for (const n of nodes) { if (n.type === 'dir') flat(n.children, out); else out.push(n.path); } return out; };
@@ -142,9 +143,9 @@ function renderTree() {
         else { S.selDir = n.path.includes('/') ? n.path.slice(0, n.path.lastIndexOf('/')) : ''; openAt(n.path); }
       };
       li.append(chev, fi, nm);
-      if (n.path === mainFile()) { const st = document.createElement('span'); st.className = 'main-star ico'; st.title = 'Arquivo principal'; st.innerHTML = icon('star', 13); li.append(st); }
+      if (n.path === mainFile()) { const st = document.createElement('span'); st.className = 'main-star ico'; st.title = t('files.mainFile'); st.innerHTML = icon('star', 13); li.append(st); }
       const mb = document.createElement('button');
-      mb.className = 'mini'; mb.innerHTML = icon('more', 16); mb.title = 'Ações'; mb.setAttribute('aria-label', 'Ações');
+      mb.className = 'mini'; mb.innerHTML = icon('more', 16); mb.title = t('files.actions'); mb.setAttribute('aria-label', t('files.actions'));
       mb.onclick = ev => { ev.stopPropagation(); fileMenu(n); };
       li.append(mb);
       ul.append(li);
@@ -152,33 +153,33 @@ function renderTree() {
     }
   };
   walk(S.tree, 0);
-  if (!S.tree.length) ul.innerHTML = '<li class="empty">Projeto vazio. Use os botões acima para criar ou importar arquivos.</li>';
+  if (!S.tree.length) { ul.innerHTML = '<li class="empty"></li>'; ul.firstChild.textContent = t('files.empty'); }
 }
 
 function fileMenu(n) {
   const items = [];
   if (n.type === 'dir') {
-    items.push({ label: 'Novo arquivo aqui', onPick: () => newFile(n.path) }, { label: 'Nova subpasta aqui', onPick: () => newFolder(n.path) });
+    items.push({ label: t('files.newFileHere'), onPick: () => newFile(n.path) }, { label: t('files.newFolderHere'), onPick: () => newFolder(n.path) });
   } else {
-    items.push({ label: 'Abrir', onPick: () => openAt(n.path) });
-    if (/\.tex$/i.test(n.path)) items.push({ label: 'Definir como arquivo principal', onPick: () => setMain(n.path) });
+    items.push({ label: t('files.open'), onPick: () => openAt(n.path) });
+    if (/\.tex$/i.test(n.path)) items.push({ label: t('files.setMain'), onPick: () => setMain(n.path) });
   }
-  items.push({ label: 'Renomear / mover', onPick: () => renamePath(n) }, { label: 'Excluir', onPick: () => deletePath(n) });
+  items.push({ label: t('files.rename'), onPick: () => renamePath(n) }, { label: t('files.delete'), onPick: () => deletePath(n) });
   pickList(n.path, items);
 }
 
 async function newFile(dir = S.selDir) {
-  const p = prompt('Caminho do novo arquivo', (dir ? dir + '/' : '') + 'novo.tex');
+  const p = prompt(t('files.newFilePrompt'), (dir ? dir + '/' : '') + t('files.newFileDefault'));
   if (!p) return;
   try { await api.write(S.project, p.trim(), ''); await refreshTree(); await openAt(p.trim()); } catch (e) { toast(e.message); }
 }
 async function newFolder(dir = S.selDir) {
-  const p = prompt('Caminho da nova pasta', (dir ? dir + '/' : '') + 'figuras');
+  const p = prompt(t('files.newFolderPrompt'), (dir ? dir + '/' : '') + t('files.newFolderDefault'));
   if (!p) return;
   try { await api.mkdir(S.project, p.trim()); S.expanded.add(p.trim()); await refreshTree(); } catch (e) { toast(e.message); }
 }
 async function renamePath(n) {
-  const to = prompt('Novo caminho', n.path);
+  const to = prompt(t('files.renamePrompt'), n.path);
   if (!to || to === n.path) return;
   try {
     await saveAll(false);
@@ -189,13 +190,13 @@ async function renamePath(n) {
   } catch (e) { toast(e.message); }
 }
 async function deletePath(n) {
-  if (!confirm(`Excluir “${n.path}”? Isso não pode ser desfeito.`)) return;
+  if (!confirm(t('files.confirmDelete', { path: n.path }))) return;
   try {
     for (const f of [...S.open]) if (f === n.path || f.startsWith(n.path + '/')) closeTab(f, true);
     await api.remove(S.project, n.path); await refreshTree();
   } catch (e) { toast(e.message); }
 }
-async function setMain(p) { await api.saveSettings(S.project, { mainFile: p }); await loadSettings(); renderTree(); toast(`Principal: ${p}`); }
+async function setMain(p) { await api.saveSettings(S.project, { mainFile: p }); await loadSettings(); renderTree(); toast(t('files.mainSet', { path: p })); }
 
 $('#f-new').onclick = () => newFile();
 $('#f-dir').onclick = () => newFolder();
@@ -206,7 +207,7 @@ $('#f-input').onchange = async e => {
   e.target.value = '';
   try {
     for (const f of files) await api.write(S.project, (S.selDir ? S.selDir + '/' : '') + f.name, f);
-    toast(`${files.length} arquivo(s) importado(s)`);
+    toast(t('files.imported', { count: files.length }));
     await refreshTree();
   } catch (err) { toast(err.message); }
 };
@@ -222,7 +223,7 @@ function renderTabs() {
     const fi = document.createElement('span');
     fi.className = 'ico'; fi.style.color = color; fi.innerHTML = icon(ic, 15);
     b.append(fi, document.createTextNode(name));
-    if (S.dirty.has(p)) { const d = document.createElement('span'); d.className = 'dot'; d.title = 'Não salvo'; b.append(d); }
+    if (S.dirty.has(p)) { const d = document.createElement('span'); d.className = 'dot'; d.title = t('files.unsaved'); b.append(d); }
     const x = document.createElement('span');
     x.className = 'x ico'; x.innerHTML = icon('x', 14);
     x.onclick = ev => { ev.stopPropagation(); closeTab(p); };
@@ -233,7 +234,7 @@ function renderTabs() {
 }
 
 async function openFile(path) {
-  if (!TEXT_EXT.test(path)) { toast('Arquivo não editável (binário)'); return false; }
+  if (!TEXT_EXT.test(path)) { toast(t('files.binary')); return false; }
   if (S.cur === path && editor.has(path)) return true;
   try {
     let text;
@@ -281,7 +282,7 @@ async function saveAll(withCompile) {
       S.dirty.delete(paths[i]);
       if (paths[i] === S.cur) lsp.didSave(paths[i]);
     }
-  } catch (e) { toast('Erro ao salvar: ' + e.message); }
+  } catch (e) { toast(t('files.saveError', { error: e.message })); }
   renderTabs();
   return true;
 }
@@ -300,7 +301,7 @@ const ours = m => m.project === S.project;
 sock.on('compilation_started', m => {
   if (!ours(m)) return;
   S.compiling = true;
-  $('#btn-compile').disabled = true; $('#btn-compile').classList.add('busy'); $('#btn-compile .lbl').textContent = 'Compilando…';
+  $('#btn-compile').disabled = true; $('#btn-compile').classList.add('busy'); $('#btn-compile .lbl').textContent = t('topbar.compiling');
   setStatus(`${m.compiler}…`, 'busy');
   $('#output').textContent = '';
 });
@@ -313,11 +314,11 @@ sock.on('log', m => {
 });
 function endCompile(m, ok) {
   S.compiling = false;
-  $('#btn-compile').disabled = false; $('#btn-compile').classList.remove('busy'); $('#btn-compile .lbl').textContent = 'Compilar';
+  $('#btn-compile').disabled = false; $('#btn-compile').classList.remove('busy'); $('#btn-compile .lbl').textContent = t('topbar.compile');
   S.compileDiags = m.diagnostics || [];
   if (m.error) { S.compileDiags = [{ severity: 'error', file: null, line: null, message: m.error }]; $('#output').textContent += `\n${m.error}\n`; }
   const errs = S.compileDiags.filter(d => d.severity === 'error').length;
-  setStatus(ok ? `✓ ok${m.ms ? ` (${(m.ms / 1000).toFixed(1)}s)` : ''}` : `✗ ${errs} erro(s)`, ok ? 'ok' : 'err');
+  setStatus(ok ? `✓ ok${m.ms ? ` (${(m.ms / 1000).toFixed(1)}s)` : ''}` : '✗ ' + t('logs.statusErrors', { count: errs }), ok ? 'ok' : 'err');
   editor.setCompileDiags(S.compileDiags);
   renderProblems();
 }
@@ -343,9 +344,9 @@ sock.on('open', () => { if (S.project) sock.send({ type: 'open_project', project
 lsp.onReady = () => editor.resync();
 lsp.onStatus = (st, hint) => {
   const el = $('#lsp-status');
-  el.textContent = { ready: 'TexLab: ✓', starting: 'TexLab: …', stopped: 'TexLab: parado', unavailable: 'TexLab: ausente' }[st] || 'TexLab';
+  el.textContent = ({ ready: 'TexLab: ✓', starting: 'TexLab: …', stopped: t('lsp.stopped'), unavailable: t('lsp.unavailable') })[st] || 'TexLab';
   el.className = 'pill ' + (st === 'ready' ? 'ok' : st === 'unavailable' ? 'err' : '');
-  el.title = st === 'unavailable' ? `Instale com: ${hint}` : 'TexLab (LSP)';
+  el.title = st === 'unavailable' ? t('lsp.installWith', { hint }) : 'TexLab (LSP)';
 };
 
 /* ---------- logs / problems ---------- */
@@ -360,11 +361,11 @@ function renderProblems() {
   const errs = all.filter(d => d.severity === 'error').length, warns = all.filter(d => d.severity === 'warning').length;
   const bd = $('#logs-badge'), n = errs || warns;
   bd.hidden = !n; bd.textContent = n > 99 ? '99+' : String(n); bd.classList.toggle('warn', !errs);
-  $('#btn-logs').title = errs ? `Logs: ${errs} erro(s)` : warns ? `Logs: ${warns} aviso(s)` : 'Logs e problemas';
+  $('#btn-logs').title = errs ? t('logs.titleErrors', { count: errs }) : warns ? t('logs.titleWarnings', { count: warns }) : t('logs.title');
   const box = $('#problems');
   box.textContent = '';
   const list = all.filter(d => S.filter === 'all' || d.severity === S.filter);
-  if (!list.length) { box.innerHTML = `<div class="empty">${icon('check-circle', 18)}Nenhum problema.</div>`; return; }
+  if (!list.length) { box.innerHTML = `<div class="empty">${icon('check-circle', 18)}</div>`; box.firstChild.append(t('logs.noProblems')); return; }
   for (const d of list) {
     const wrap = document.createElement('div');
     wrap.className = 'prob-wrap';
@@ -382,17 +383,17 @@ function renderProblems() {
       const file = miss[1] || miss[2];
       const a = document.createElement('button');
       a.className = 'prob-act';
-      a.innerHTML = `${icon('package', 15)}Buscar pacote para ${file.replace(/[<>&]/g, '')}`;
+      a.innerHTML = `${icon('package', 15)}${t('logs.findPackage', { file: file.replace(/[<>&]/g, '') })}`;
       a.onclick = () => openPkgs({ q: file, byFile: true, recompile: true });
       wrap.append(a);
     }
     box.append(wrap);
   }
 }
-function switchLog(t) {
-  S.logTab = t;
-  document.querySelectorAll('[data-lt]').forEach(b => b.classList.toggle('active', b.dataset.lt === t));
-  $('#problems').hidden = t !== 'problems'; $('#output').hidden = t !== 'output';
+function switchLog(tab) {
+  S.logTab = tab;
+  document.querySelectorAll('[data-lt]').forEach(b => b.classList.toggle('active', b.dataset.lt === tab));
+  $('#problems').hidden = tab !== 'problems'; $('#output').hidden = tab !== 'output';
 }
 document.querySelectorAll('[data-lt]').forEach(b => { b.onclick = () => switchLog(b.dataset.lt); });
 document.querySelectorAll('[data-filter]').forEach(b => {
@@ -462,11 +463,11 @@ const NAME_OK = /^[A-Za-z0-9][A-Za-z0-9._ -]{0,63}$/;
 function ago(ms) {
   if (!ms) return '';
   const d = (Date.now() - ms) / 1000;
-  if (d < 60) return 'agora há pouco';
-  if (d < 3600) return `há ${Math.floor(d / 60)} min`;
-  if (d < 86400) return `há ${Math.floor(d / 3600)} h`;
-  if (d < 86400 * 7) return `há ${Math.floor(d / 86400)} dia(s)`;
-  return new Date(ms).toLocaleDateString('pt-BR');
+  if (d < 60) return t('time.justNow');
+  if (d < 3600) return t('time.minutes', { n: Math.floor(d / 60) });
+  if (d < 86400) return t('time.hours', { n: Math.floor(d / 3600) });
+  if (d < 86400 * 7) return t('time.days', { n: Math.floor(d / 86400) });
+  return new Date(ms).toLocaleDateString(getLang());
 }
 function renderHome() {
   const list = $('#home-list'), f = $('#home-filter').value.trim().toLowerCase();
@@ -475,7 +476,7 @@ function renderHome() {
   $('#home-filter').hidden = all.length < 7;
   list.textContent = '';
   const shown = all.filter(p => !f || p.name.toLowerCase().includes(f));
-  if (!shown.length) { list.innerHTML = `<li class="empty">${all.length ? 'Nenhum projeto com esse nome.' : 'Você ainda não tem projetos. Crie o primeiro acima.'}</li>`; return; }
+  if (!shown.length) { list.innerHTML = '<li class="empty"></li>'; list.firstChild.textContent = all.length ? t('home.noMatch') : t('home.noProjects'); return; }
   for (const p of shown) {
     const li = document.createElement('li');
     li.className = 'pcard' + (p.name === S.project ? ' cur' : '');
@@ -483,14 +484,14 @@ function renderHome() {
     open.className = 'open';
     open.innerHTML = `<span class="pi ico">${icon(p.name === S.project ? 'folder-open' : 'folder', 22)}</span><span class="tx"><span class="nm"></span><small></small></span>`;
     open.querySelector('.nm').textContent = p.name;
-    if (p.name === S.project) { const t = document.createElement('span'); t.className = 'tag'; t.textContent = 'aberto'; open.querySelector('.nm').append(t); }
-    open.querySelector('small').textContent = p.mtime ? `Modificado ${ago(p.mtime)}` : '';
+    if (p.name === S.project) { const tag = document.createElement('span'); tag.className = 'tag'; tag.textContent = t('home.openTag'); open.querySelector('.nm').append(tag); }
+    open.querySelector('small').textContent = p.mtime ? t('home.modified', { ago: ago(p.mtime) }) : '';
     open.onclick = async () => { $('#home').close(); if (p.name !== S.project) await selectProject(p.name); };
     const del = document.createElement('button');
-    del.className = 'del ib sm'; del.title = `Excluir ${p.name}`; del.setAttribute('aria-label', `Excluir ${p.name}`);
+    del.className = 'del ib sm'; del.title = t('home.delete', { name: p.name }); del.setAttribute('aria-label', del.title);
     del.innerHTML = icon('trash', 17);
     del.onclick = async () => {
-      if (!confirm(`Excluir o projeto “${p.name}” e todos os seus arquivos? Isso não pode ser desfeito.`)) return;
+      if (!confirm(t('home.confirmDelete', { name: p.name }))) return;
       try {
         await api.deleteProject(p.name);
         if (p.name === S.project) { S.dirty.clear(); S.project = null; $('#home').close(); await loadProjects(); }
@@ -518,12 +519,12 @@ $('#home-filter').oninput = renderHome;
 $('#new-form').onsubmit = async e => {
   e.preventDefault();
   const name = $('#new-name').value.trim();
-  if (!NAME_OK.test(name)) { toast('Nome inválido: use letras, números, espaço, ponto, hífen ou sublinhado (até 64).'); return; }
+  if (!NAME_OK.test(name)) { toast(t('home.invalidName')); return; }
   try {
     await api.createProject(name);
     $('#new-name').value = ''; $('#home').close();
     await loadProjects(name);
-    toast(`Projeto “${name}” criado`);
+    toast(t('home.created', { name }));
   } catch (err) { toast(err.message); }
 };
 // clicking outside the dialog closes it
@@ -541,14 +542,14 @@ async function downloadPdf() {
   if (!S.project) return;
   try {
     const r = await fetch(api.pdfUrl(S.project) + '?download=1', { cache: 'no-store' });
-    if (!r.ok) { toast(r.status === 404 ? 'Ainda não há PDF. Compile primeiro.' : 'Não foi possível baixar o PDF'); return; }
+    if (!r.ok) { toast(r.status === 404 ? t('pdf.noPdfYet') : t('pdf.downloadError')); return; }
     const blob = await r.blob();
     const name = ((S.settings.main || 'documento').split('/').pop().replace(/\.tex$/i, '') || 'documento') + '.pdf';
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob); a.download = name;
     document.body.append(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 15000);
-    toast(`PDF baixado: ${name}`);
+    toast(t('pdf.downloaded', { name }));
   } catch (e) { toast(e.message); }
 }
 $('#pdf-download').onclick = downloadPdf;
@@ -562,13 +563,13 @@ function setPkgBusy(b) {
   document.querySelectorAll('#pkg-results button').forEach(x => { x.disabled = b; });
   $('#pkg-form button').disabled = b || !pkg.avail;
 }
-function pkgMsg(t) { const d = document.createElement('div'); d.className = 'empty'; d.textContent = t; return d; }
+function pkgMsg(text) { const d = document.createElement('div'); d.className = 'empty'; d.textContent = text; return d; }
 function renderPkgResults(q, results) {
   const box = $('#pkg-results');
   box.textContent = '';
   const rows = [...results];
-  if (!$('#pkg-file').checked && /^[A-Za-z0-9][A-Za-z0-9._+-]*$/.test(q) && !rows.some(r => r.name === q)) rows.unshift({ name: q, desc: 'Instalar com este nome exato', direct: true });
-  if (!rows.length) { box.append(pkgMsg('Nenhum pacote encontrado.')); return; }
+  if (!$('#pkg-file').checked && /^[A-Za-z0-9][A-Za-z0-9._+-]*$/.test(q) && !rows.some(r => r.name === q)) rows.unshift({ name: q, desc: t('packages.exactName'), direct: true });
+  if (!rows.length) { box.append(pkgMsg(t('packages.none'))); return; }
   for (const r of rows) {
     const d = document.createElement('div');
     d.className = 'pkg';
@@ -577,7 +578,7 @@ function renderPkgResults(q, results) {
     d.querySelector('small').textContent = r.desc || '';
     d.querySelector('small').title = r.desc || '';
     const b = document.createElement('button');
-    b.innerHTML = `${icon('download', 15)}Instalar`;
+    b.innerHTML = `${icon('download', 15)}${t('packages.install')}`;
     b.disabled = pkg.busy;
     b.onclick = () => installPkg(r.name);
     d.append(b);
@@ -588,7 +589,7 @@ async function searchPkgs() {
   const q = $('#pkg-q').value.trim();
   if (!q) return;
   const box = $('#pkg-results');
-  box.textContent = ''; box.append(pkgMsg('Buscando… (precisa de internet)'));
+  box.textContent = ''; box.append(pkgMsg(t('packages.searching')));
   try { renderPkgResults(q, (await api.tlmgrSearch(q, $('#pkg-file').checked)).results); }
   catch (e) { box.textContent = ''; box.append(pkgMsg(e.message)); }
 }
@@ -603,7 +604,7 @@ async function openPkgs(opts = {}) {
   pkg.avail = !!st.available;
   const un = $('#pkg-unavail');
   un.hidden = pkg.avail;
-  un.textContent = 'tlmgr não encontrado. Instale o TeX Live no Termux: bash scripts/install-texlive.sh';
+  un.textContent = t('packages.noTlmgr');
   setPkgBusy(!!st.busy);
   if (st.busy && st.job) { $('#pkg-log').textContent = st.job.log; $('#pkg-logbox').open = true; }
   if (opts.q != null) {
@@ -619,7 +620,7 @@ sock.on('tlmgr_started', () => { setPkgBusy(true); $('#pkg-log').textContent = '
 sock.on('tlmgr_log', m => { const l = $('#pkg-log'); l.textContent += m.text; l.scrollTop = l.scrollHeight; });
 sock.on('tlmgr_done', m => {
   setPkgBusy(false);
-  toast(m.ok ? `Instalado: ${m.packages.join(', ')}` : 'A instalação falhou. Veja a saída no diálogo de pacotes.', m.ok ? 2600 : 5000);
+  toast(m.ok ? t('packages.installed', { packages: m.packages.join(', ') }) : t('packages.failed'), m.ok ? 2600 : 5000);
   if (m.ok && pkg.recompile) { pkg.recompile = false; compile(); }
 });
 
@@ -627,7 +628,7 @@ $('#btn-settings').onclick = () => {
   setMenu(false);
   const sel = $('#set-main');
   sel.textContent = '';
-  sel.append(new Option('(detectar automaticamente)', ''));
+  sel.append(new Option(t('settings.autoDetect'), ''));
   for (const f of flat(S.tree).filter(f => /\.tex$/i.test(f))) sel.append(new Option(f, f));
   sel.value = S.settings.mainFile || '';
   $('#set-debounce').value = S.settings.debounceMs;
@@ -646,9 +647,9 @@ $('#set-save').onclick = async () => {
   } catch (e) { toast(e.message); }
   $('#settings').close();
 };
-$('#set-clean').onclick = async () => { try { await api.clean(S.project); toast('Arquivos auxiliares removidos'); } catch (e) { toast(e.message); } };
+$('#set-clean').onclick = async () => { try { await api.clean(S.project); toast(t('settings.cleaned')); } catch (e) { toast(e.message); } };
 $('#set-delete').onclick = async () => {
-  if (!confirm(`Excluir o projeto “${S.project}” e todos os seus arquivos? Isso não pode ser desfeito.`)) return;
+  if (!confirm(t('home.confirmDelete', { name: S.project }))) return;
   try { await api.deleteProject(S.project); $('#settings').close(); S.dirty.clear(); S.project = null; await loadProjects(); } catch (e) { toast(e.message); }
 };
 $('#picker-close').onclick = () => $('#picker').close();
@@ -656,13 +657,13 @@ $('#picker-close').onclick = () => $('#picker').close();
 /* ---------- missing-dependency warnings ---------- */
 function renderBanner(h) {
   const miss = Object.entries(h.tools).filter(([, t]) => !t.found && t.level !== 'optional');
-  for (const o of $('#compiler-select').options) { const t = h.tools[o.value]; o.disabled = !(t && t.found); }
+  for (const o of $('#compiler-select').options) { const tool = h.tools[o.value]; o.disabled = !(tool && tool.found); }
   S.tlmgr = !!(h.tools.tlmgr && h.tools.tlmgr.found);
   const b = $('#banner');
   if (!miss.length || S.bannerDismissed) { b.hidden = true; return; }
   b.hidden = false;
-  $('#banner-txt').textContent = `Falta instalar: ${miss.map(([n]) => n).join(', ')} — toque para ver como`;
-  $('#banner-detail').textContent = miss.map(([n, t]) => `${n} não encontrado. No Termux, execute:\n  ${t.hint}`).join('\n\n');
+  $('#banner-txt').textContent = t('banner.missing', { tools: miss.map(([n]) => n).join(', ') });
+  $('#banner-detail').textContent = miss.map(([n, tool]) => t('banner.missingDetail', { tool: n, hint: tool.hint })).join('\n\n');
 }
 $('#banner-sum').onclick = () => {
   const d = $('#banner-detail');
@@ -684,5 +685,5 @@ if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').cat
     S.health = await api.health();
     renderBanner(S.health);
     await loadProjects();
-  } catch (e) { toast('Falha ao conectar ao servidor: ' + e.message, 6000); }
+  } catch (e) { toast(t('connectError', { error: e.message }), 6000); }
 })();

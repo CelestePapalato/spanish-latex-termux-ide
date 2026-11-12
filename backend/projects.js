@@ -3,6 +3,7 @@ const fs = require('fs');
 const fsp = fs.promises;
 const path = require('path');
 const cfg = require('./config');
+const { t } = require('./i18n');
 
 class HttpError extends Error { constructor(status, msg) { super(msg); this.status = status; } }
 
@@ -11,17 +12,18 @@ const GENERATED = /\.(aux|log|out|toc|lof|lot|fls|fdb_latexmk|bbl|blg|bcf|run\.x
 const COMPILERS = ['pdflatex', 'xelatex', 'lualatex'];
 const DEFAULTS = { mainFile: null, compiler: 'pdflatex', autoCompile: true, debounceMs: 1000 };
 
-const TEMPLATE = String.raw`\documentclass[12pt]{article}
+// main.tex of a new project; the title and greeting come from the locale file (server.template).
+const template = () => String.raw`\documentclass[12pt]{article}
 \usepackage{amsmath}
 
-\title{Novo projeto}
+\title{${t('server.template.title')}}
 \author{}
 \date{\today}
 
 \begin{document}
 \maketitle
 
-Olá, \LaTeX!
+${t('server.template.greeting')}
 
 \begin{equation}
   e^{i\pi} + 1 = 0
@@ -31,22 +33,22 @@ Olá, \LaTeX!
 `;
 
 function projectDir(name) {
-  if (typeof name !== 'string' || !NAME_RE.test(name) || name.includes('..')) throw new HttpError(400, 'Nome de projeto inválido');
+  if (typeof name !== 'string' || !NAME_RE.test(name) || name.includes('..')) throw new HttpError(400, t('server.projects.invalidName'));
   return path.join(cfg.PROJECTS_DIR, name);
 }
 
 // Resolves a relative path inside the project, blocking "..", absolute paths and symlinks pointing outside.
 function resolveIn(project, rel = '') {
   const root = projectDir(project);
-  if (typeof rel !== 'string' || rel.includes('\0')) throw new HttpError(400, 'Caminho inválido');
+  if (typeof rel !== 'string' || rel.includes('\0')) throw new HttpError(400, t('server.projects.invalidPath'));
   const full = path.resolve(root, rel);
-  if (full !== root && !full.startsWith(root + path.sep)) throw new HttpError(400, 'Caminho inválido');
+  if (full !== root && !full.startsWith(root + path.sep)) throw new HttpError(400, t('server.projects.invalidPath'));
   let realRoot;
-  try { realRoot = fs.realpathSync(root); } catch { throw new HttpError(404, 'Projeto não encontrado'); }
+  try { realRoot = fs.realpathSync(root); } catch { throw new HttpError(404, t('server.projects.notFound')); }
   let probe = full;
   while (!fs.existsSync(probe) && probe !== root) probe = path.dirname(probe);
   const realProbe = fs.realpathSync(probe);
-  if (realProbe !== realRoot && !realProbe.startsWith(realRoot + path.sep)) throw new HttpError(400, 'Caminho inválido (link simbólico)');
+  if (realProbe !== realRoot && !realProbe.startsWith(realRoot + path.sep)) throw new HttpError(400, t('server.projects.symlink'));
   return full;
 }
 
@@ -77,8 +79,8 @@ async function listProjectsDetailed() {
 async function createProject(name) {
   const dir = projectDir(name);
   await fsp.mkdir(cfg.PROJECTS_DIR, { recursive: true });
-  try { await fsp.mkdir(dir); } catch (e) { throw new HttpError(409, e.code === 'EEXIST' ? 'Já existe um projeto com esse nome' : e.message); }
-  await fsp.writeFile(path.join(dir, 'main.tex'), TEMPLATE);
+  try { await fsp.mkdir(dir); } catch (e) { throw new HttpError(409, e.code === 'EEXIST' ? t('server.projects.exists') : e.message); }
+  await fsp.writeFile(path.join(dir, 'main.tex'), template());
   await saveSettings(name, { mainFile: 'main.tex' });
 }
 
@@ -139,7 +141,7 @@ async function detectMain(project, s) {
 }
 
 async function writeFile(project, rel, buf) {
-  if (!rel) throw new HttpError(400, 'Caminho vazio');
+  if (!rel) throw new HttpError(400, t('server.projects.emptyPath'));
   const full = resolveIn(project, rel);
   await fsp.mkdir(path.dirname(full), { recursive: true });
   resolveIn(project, rel);
@@ -149,19 +151,19 @@ async function writeFile(project, rel, buf) {
 }
 
 async function removePath(project, rel) {
-  if (!rel) throw new HttpError(400, 'Caminho vazio');
+  if (!rel) throw new HttpError(400, t('server.projects.emptyPath'));
   await fsp.rm(resolveIn(project, rel), { recursive: true, force: true });
 }
 
 async function mkdir(project, rel) {
-  if (!rel) throw new HttpError(400, 'Caminho vazio');
+  if (!rel) throw new HttpError(400, t('server.projects.emptyPath'));
   await fsp.mkdir(resolveIn(project, rel), { recursive: true });
 }
 
 async function rename(project, from, to) {
-  if (!from || !to) throw new HttpError(400, 'Caminho vazio');
+  if (!from || !to) throw new HttpError(400, t('server.projects.emptyPath'));
   const a = resolveIn(project, from), b = resolveIn(project, to);
-  if (fs.existsSync(b)) throw new HttpError(409, 'O destino já existe');
+  if (fs.existsSync(b)) throw new HttpError(409, t('server.projects.destExists'));
   await fsp.mkdir(path.dirname(b), { recursive: true });
   await fsp.rename(a, b);
 }

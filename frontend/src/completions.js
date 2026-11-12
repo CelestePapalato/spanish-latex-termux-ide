@@ -1,26 +1,27 @@
 import { snippetCompletion } from '@codemirror/autocomplete';
+import { t } from './i18n.js';
 
 // Local suggestions: shown instantly (without waiting for TexLab) and merged with the LSP ones.
-// [name, number of {} arguments, description]
+// [name, number of {} arguments]. The descriptions live in public/locales/<lang>.json → completions.commands
 const CMD = [
-  ['documentclass', 1, 'classe do documento'], ['usepackage', 1, 'carrega um pacote'], ['input', 1, 'inclui um arquivo'], ['include', 1, 'inclui um capítulo'],
-  ['includegraphics', 1, 'insere imagem'], ['part', 1, 'parte'], ['chapter', 1, 'capítulo'], ['section', 1, 'seção'], ['subsection', 1, 'subseção'],
-  ['subsubsection', 1, 'subsubseção'], ['paragraph', 1, 'parágrafo'], ['label', 1, 'rótulo'], ['ref', 1, 'referência'], ['eqref', 1, 'referência de equação'],
-  ['pageref', 1, 'número da página'], ['autoref', 1, 'referência automática'], ['cref', 1, 'referência (cleveref)'], ['cite', 1, 'citação'], ['citep', 1, 'citação (entre parênteses)'],
-  ['citet', 1, 'citação (textual)'], ['footnote', 1, 'nota de rodapé'], ['caption', 1, 'legenda'], ['title', 1, 'título'], ['author', 1, 'autor'], ['date', 1, 'data'],
-  ['maketitle', 0, 'gera o título'], ['tableofcontents', 0, 'sumário'], ['listoffigures', 0, 'lista de figuras'], ['listoftables', 0, 'lista de tabelas'],
-  ['textbf', 1, 'negrito'], ['textit', 1, 'itálico'], ['emph', 1, 'ênfase'], ['underline', 1, 'sublinhado'], ['texttt', 1, 'monoespaçado'], ['textsc', 1, 'versalete'],
-  ['textrm', 1, 'romano'], ['textsf', 1, 'sem serifa'], ['textcolor', 2, 'texto colorido'], ['color', 1, 'cor'], ['url', 1, 'endereço'], ['href', 2, 'hiperlink'],
-  ['item', 0, 'item de lista'], ['hline', 0, 'linha horizontal'], ['toprule', 0, 'booktabs: linha superior'], ['midrule', 0, 'booktabs: linha do meio'],
-  ['bottomrule', 0, 'booktabs: linha inferior'], ['cmidrule', 1, 'booktabs: linha parcial'], ['multicolumn', 3, 'células mescladas'], ['centering', 0, 'centraliza'],
-  ['newpage', 0, 'nova página'], ['clearpage', 0, 'limpa página'], ['noindent', 0, 'sem recuo'], ['vspace', 1, 'espaço vertical'], ['hspace', 1, 'espaço horizontal'],
-  ['bibliography', 1, 'arquivo .bib'], ['bibliographystyle', 1, 'estilo da bibliografia'], ['printbibliography', 0, 'imprime bibliografia (biblatex)'],
-  ['newcommand', 2, 'novo comando'], ['renewcommand', 2, 'redefine comando'], ['setlength', 2, 'define comprimento'], ['geometry', 1, 'margens'], ['chemfig', 1, 'estrutura química'],
-  ['frac', 2, 'fração'], ['sqrt', 1, 'raiz'], ['sum', 0, 'somatório'], ['int', 0, 'integral'], ['prod', 0, 'produtório'], ['lim', 0, 'limite'], ['infty', 0, 'infinito'],
-  ['partial', 0, 'derivada parcial'], ['nabla', 0, 'nabla'], ['cdot', 0, 'ponto'], ['times', 0, 'vezes'], ['leq', 0, 'menor ou igual'], ['geq', 0, 'maior ou igual'],
-  ['neq', 0, 'diferente'], ['approx', 0, 'aproximado'], ['rightarrow', 0, 'seta →'], ['Rightarrow', 0, 'seta ⇒'], ['leftrightarrow', 0, 'seta ↔'], ['mathbb', 1, 'quadro negro'],
-  ['mathbf', 1, 'negrito matemático'], ['mathcal', 1, 'caligráfico'], ['mathrm', 1, 'romano matemático'], ['vec', 1, 'vetor'], ['hat', 1, 'chapéu'], ['bar', 1, 'barra'],
-  ['overline', 1, 'linha acima'], ['text', 1, 'texto em modo matemático'], ['left', 0, 'delimitador esquerdo'], ['right', 0, 'delimitador direito'], ['ce', 1, 'mhchem: fórmula química'],
+  ['documentclass', 1], ['usepackage', 1], ['input', 1], ['include', 1],
+  ['includegraphics', 1], ['part', 1], ['chapter', 1], ['section', 1], ['subsection', 1],
+  ['subsubsection', 1], ['paragraph', 1], ['label', 1], ['ref', 1], ['eqref', 1],
+  ['pageref', 1], ['autoref', 1], ['cref', 1], ['cite', 1], ['citep', 1],
+  ['citet', 1], ['footnote', 1], ['caption', 1], ['title', 1], ['author', 1], ['date', 1],
+  ['maketitle', 0], ['tableofcontents', 0], ['listoffigures', 0], ['listoftables', 0],
+  ['textbf', 1], ['textit', 1], ['emph', 1], ['underline', 1], ['texttt', 1], ['textsc', 1],
+  ['textrm', 1], ['textsf', 1], ['textcolor', 2], ['color', 1], ['url', 1], ['href', 2],
+  ['item', 0], ['hline', 0], ['toprule', 0], ['midrule', 0],
+  ['bottomrule', 0], ['cmidrule', 1], ['multicolumn', 3], ['centering', 0],
+  ['newpage', 0], ['clearpage', 0], ['noindent', 0], ['vspace', 1], ['hspace', 1],
+  ['bibliography', 1], ['bibliographystyle', 1], ['printbibliography', 0],
+  ['newcommand', 2], ['renewcommand', 2], ['setlength', 2], ['geometry', 1], ['chemfig', 1],
+  ['frac', 2], ['sqrt', 1], ['sum', 0], ['int', 0], ['prod', 0], ['lim', 0], ['infty', 0],
+  ['partial', 0], ['nabla', 0], ['cdot', 0], ['times', 0], ['leq', 0], ['geq', 0],
+  ['neq', 0], ['approx', 0], ['rightarrow', 0], ['Rightarrow', 0], ['leftrightarrow', 0], ['mathbb', 1],
+  ['mathbf', 1], ['mathcal', 1], ['mathrm', 1], ['vec', 1], ['hat', 1], ['bar', 1],
+  ['overline', 1], ['text', 1], ['left', 0], ['right', 0], ['ce', 1],
 ];
 const GREEK = 'alpha beta gamma delta epsilon varepsilon zeta eta theta lambda mu nu xi pi rho sigma tau phi varphi chi psi omega Gamma Delta Theta Lambda Xi Pi Sigma Phi Psi Omega'.split(' ');
 const SPECIAL = {
@@ -34,7 +35,7 @@ const ENV = [
   ['equation'], ['equation*'], ['align'], ['align*'], ['gather'], ['multline'], ['split'], ['cases'], ['matrix'], ['pmatrix'], ['bmatrix'], ['array', null, '{${cc}}'],
   ['figure', '  \\centering\n  \\includegraphics[width=\\linewidth]{${}}\n  \\caption{${}}\n  \\label{fig:${}}', '[${htbp}]'],
   ['table', '  \\centering\n  \\caption{${}}\n  \\label{tab:${}}\n  \\begin{tabular}{${ll}}\n    \\toprule\n    ${}\n    \\bottomrule\n  \\end{tabular}', '[${htbp}]'],
-  ['tabular', null, '{${ll}}'], ['center'], ['abstract'], ['quote'], ['verbatim'], ['minipage', null, '{${0.5\\linewidth}}'], ['tikzpicture'], ['frame', null, '{${Título}}'],
+  ['tabular', null, '{${ll}}'], ['center'], ['abstract'], ['quote'], ['verbatim'], ['minipage', null, '{${0.5\\linewidth}}'], ['tikzpicture'], ['frame', null, '{${' + t('completions.frameTitle') + '}}'],
   ['theorem'], ['lemma'], ['proof'], ['definition'], ['thebibliography', null, '{${99}}'],
 ];
 const ENV_NAMES = ENV.map(e => e[0]);
@@ -65,15 +66,16 @@ function snip(template, start, extra) {
 
 function commandOptions(start) {
   const out = [];
-  for (const [n, argc, detail] of CMD) {
+  for (const [n, argc] of CMD) {
+    const detail = t('completions.commands.' + n);
     const label = '\\' + n, type = argc === 0 && /^(sum|int|prod|lim|infty|partial|nabla|cdot|times|leq|geq|neq|approx|rightarrow|Rightarrow|leftrightarrow)$/.test(n) ? 'keyword' : 'command';
     const tpl = SPECIAL[n] || (argc ? label + '{${}}'.repeat(argc) : null);
     out.push(tpl ? snip(tpl, start, { label, detail, type }) : plain(label, start, { detail, type }));
   }
-  for (const g of GREEK) out.push(plain('\\' + g, start, { detail: 'letra grega', type: 'variable' }));
+  for (const g of GREEK) out.push(plain('\\' + g, start, { detail: t('completions.greekLetter'), type: 'variable' }));
   for (const [n, body, args] of ENV) {
     const b = body === undefined ? '  ${}' : body === null ? '  ${}' : body;
-    out.push(snip(`\\begin{${n}}${args || ''}\n${b}\n\\end{${n}}`, start, { label: `\\begin{${n}}`, detail: 'ambiente', type: 'environment', boost: -1 }));
+    out.push(snip(`\\begin{${n}}${args || ''}\n${b}\n\\end{${n}}`, start, { label: `\\begin{${n}}`, detail: t('completions.environment'), type: 'environment', boost: -1 }));
   }
   return out;
 }

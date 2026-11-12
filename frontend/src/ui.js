@@ -1,3 +1,5 @@
+import { t } from './i18n.js';
+
 export const $ = s => document.querySelector(s);
 
 let tt;
@@ -20,7 +22,7 @@ function openPicker(title) {
 
 export function pickList(title, items) {
   const box = openPicker(title);
-  if (!items.length) { box.textContent = 'Nada encontrado.'; return; }
+  if (!items.length) { box.textContent = t('picker.empty'); return; }
   for (const it of items) {
     const b = document.createElement('button');
     b.className = 'pick'; b.textContent = it.label;

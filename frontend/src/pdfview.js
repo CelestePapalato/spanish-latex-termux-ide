@@ -1,4 +1,5 @@
 import { $ } from './ui.js';
+import { t } from './i18n.js';
 
 let pdfjs = null;
 async function lib() {
@@ -61,7 +62,7 @@ export class PdfViewer {
     try {
       const L = await lib();
       const r = await fetch(`${this.url}?t=${Date.now()}`, { cache: 'no-store' });
-      if (!r.ok) { if (!this.doc) this.msg(r.status === 404 ? 'Nenhum PDF ainda. Toque em Compilar.' : 'Não foi possível carregar o PDF.'); return; }
+      if (!r.ok) { if (!this.doc) this.msg(r.status === 404 ? t('pdf.none') : t('pdf.loadError')); return; }
       const data = new Uint8Array(await r.arrayBuffer());
       const doc = await L.getDocument({ data, cMapUrl: '/vendor/pdfjs/cmaps/', cMapPacked: true, standardFontDataUrl: '/vendor/pdfjs/standard_fonts/', wasmUrl: '/vendor/pdfjs/wasm/' }).promise;
       const sizes = [];
@@ -72,7 +73,7 @@ export class PdfViewer {
       this.msg('');
       await this.layout();
       if (old) old.destroy();
-    } catch (e) { this.msg('Erro no PDF: ' + e.message); }
+    } catch (e) { this.msg(t('pdf.error', { error: e.message })); }
   }
 
   async layout() {
@@ -160,9 +161,9 @@ export class PdfViewer {
     const start = q === this.last.q ? this.last.page + 1 : this.cur();
     for (let i = 0; i < N; i++) {
       const n = ((start - 1 + i) % N) + 1;
-      if ((await this.pageText(n)).includes(q)) { this.goTo(n); this.last = { q, page: n }; this.info.textContent = `p. ${n}`; return; }
+      if ((await this.pageText(n)).includes(q)) { this.goTo(n); this.last = { q, page: n }; this.info.textContent = t('pdf.foundOnPage', { n }); return; }
     }
     this.last = { q, page: 0 };
-    this.info.textContent = 'Não encontrado';
+    this.info.textContent = t('pdf.notFound');
   }
 }

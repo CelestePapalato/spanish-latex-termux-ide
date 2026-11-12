@@ -1,7 +1,7 @@
 {
   "name": "LaTeX IDE (Termux)",
   "short_name": "LaTeX IDE",
-  "description": "IDE LaTeX local com editor, PDF, SyncTeX e gerenciador de pacotes TeX Live",
+  "description": "IDE LaTeX local con editor, PDF, SyncTeX y gestor de paquetes de TeX Live",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

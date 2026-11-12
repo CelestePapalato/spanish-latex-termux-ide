@@ -7,7 +7,7 @@ const root = path.join(__dirname, '..');
 async function main() {
   const esbuild = require('esbuild');
   await esbuild.build({
-    entryPoints: [path.join(root, 'frontend/src/main.js')],
+    entryPoints: [path.join(root, 'frontend/src/boot.js')],
     bundle: true, minify: true, format: 'iife', target: ['chrome90'],
     outfile: path.join(root, 'public/app.js'), logLevel: 'info',
   });

@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const { WebSocketServer } = require('ws');
 const cfg = require('./config');
+const { t } = require('./i18n');
 const P = require('./projects');
 const doctor = require('./doctor');
 const { Compiler, synctexForward, synctexBackward } = require('./compiler');
@@ -45,17 +46,17 @@ function readBody(req, limit) {
   return new Promise((resolve, reject) => {
     const chunks = []; let n = 0, over = false;
     req.on('data', c => { n += c.length; if (n > limit) over = true; else chunks.push(c); });
-    req.on('end', () => (over ? reject(new HttpError(413, 'Arquivo muito grande')) : resolve(Buffer.concat(chunks))));
+    req.on('end', () => (over ? reject(new HttpError(413, t('server.http.tooLarge'))) : resolve(Buffer.concat(chunks))));
     req.on('error', reject);
   });
 }
 async function readJson(req) {
   const b = await readBody(req, 1 << 20);
-  try { return b.length ? JSON.parse(b) : {}; } catch { throw new HttpError(400, 'JSON inválido'); }
+  try { return b.length ? JSON.parse(b) : {}; } catch { throw new HttpError(400, t('server.http.invalidJson')); }
 }
 function streamFile(res, full, headers) {
   const st = fs.statSync(full);
-  if (!st.isFile()) throw new HttpError(404, 'Não encontrado');
+  if (!st.isFile()) throw new HttpError(404, t('server.http.notFound'));
   res.writeHead(200, { 'Content-Length': st.size, 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', ...headers });
   fs.createReadStream(full).pipe(res);
 }
@@ -64,27 +65,27 @@ function streamFile(res, full, headers) {
 async function api(req, res, url) {
   const m = req.method;
   if (m !== 'GET' && m !== 'HEAD') {
-    if (req.headers['x-latexide'] !== '1') throw new HttpError(403, 'Requisição não autorizada');
-    if (!originOk(req)) throw new HttpError(403, 'Origem não permitida');
+    if (req.headers['x-latexide'] !== '1') throw new HttpError(403, t('server.http.unauthorized'));
+    if (!originOk(req)) throw new HttpError(403, t('server.http.originNotAllowed'));
   }
   let parts;
-  try { parts = url.pathname.split('/').filter(Boolean).slice(1).map(decodeURIComponent); } catch { throw new HttpError(400, 'URL inválida'); }
+  try { parts = url.pathname.split('/').filter(Boolean).slice(1).map(decodeURIComponent); } catch { throw new HttpError(400, t('server.http.invalidUrl')); }
 
   if (parts[0] === 'health' && m === 'GET') return sendJson(res, 200, { ...doctor.check(), projectsDir: cfg.PROJECTS_DIR, shellEscape: cfg.SHELL_ESCAPE });
   if (parts[0] === 'tlmgr') return tlmgrApi(req, res, url, parts[1], m);
-  if (parts[0] !== 'projects') throw new HttpError(404, 'Rota inexistente');
+  if (parts[0] !== 'projects') throw new HttpError(404, t('server.http.noRoute'));
 
   if (parts.length === 1) {
     if (m === 'GET') { const details = await P.listProjectsDetailed(); return sendJson(res, 200, { projects: details.map(d => d.name), details }); }
     if (m === 'POST') { const b = await readJson(req); await P.createProject(b.name); return sendJson(res, 201, { ok: true, name: b.name }); }
-    throw new HttpError(405, 'Método não permitido');
+    throw new HttpError(405, t('server.http.methodNotAllowed'));
   }
 
   const project = parts[1], sub = parts[2], sub2 = parts[3];
   const q = k => url.searchParams.get(k);
   if (!sub) {
     if (m === 'DELETE') { compiler.stop(project); await P.deleteProject(project); return sendJson(res, 200, { ok: true }); }
-    throw new HttpError(405, 'Método não permitido');
+    throw new HttpError(405, t('server.http.methodNotAllowed'));
   }
 
   switch (sub) {
@@ -99,10 +100,10 @@ async function api(req, res, url) {
 
     case 'file': {
       const rel = q('path');
-      if (!rel) throw new HttpError(400, 'Parâmetro path ausente');
+      if (!rel) throw new HttpError(400, t('server.http.missingPath'));
       if (m === 'GET') {
         const full = P.resolveIn(project, rel);
-        if (!fs.existsSync(full)) throw new HttpError(404, 'Arquivo não encontrado');
+        if (!fs.existsSync(full)) throw new HttpError(404, t('server.http.fileNotFound'));
         const ct = TEXT.test(rel) ? 'text/plain; charset=utf-8' : (MIME[path.extname(rel).toLowerCase()] || 'application/octet-stream');
         return streamFile(res, full, { 'Content-Type': ct, 'Content-Security-Policy': "sandbox; default-src 'none'" });
       }
@@ -114,21 +115,21 @@ async function api(req, res, url) {
         return sendJson(res, 200, { ok: true, size: body.length });
       }
       if (m === 'DELETE') { await P.removePath(project, rel); return sendJson(res, 200, { ok: true }); }
-      throw new HttpError(405, 'Método não permitido');
+      throw new HttpError(405, t('server.http.methodNotAllowed'));
     }
 
     case 'mkdir': { const b = await readJson(req); await P.mkdir(project, b.path); return sendJson(res, 200, { ok: true }); }
     case 'rename': { const b = await readJson(req); await P.rename(project, b.from, b.to); return sendJson(res, 200, { ok: true }); }
 
     case 'compile':
-      if (m !== 'POST') throw new HttpError(405, 'Método não permitido');
+      if (m !== 'POST') throw new HttpError(405, t('server.http.methodNotAllowed'));
       P.resolveIn(project, '');
       if (sub2 === 'stop') { compiler.stop(project); return sendJson(res, 200, { ok: true }); }
       compiler.compile(project).catch(() => {});
       return sendJson(res, 202, { ok: true });
 
     case 'clean':
-      if (m !== 'POST') throw new HttpError(405, 'Método não permitido');
+      if (m !== 'POST') throw new HttpError(405, t('server.http.methodNotAllowed'));
       await compiler.clean(project);
       return sendJson(res, 200, { ok: true });
 
@@ -136,7 +137,7 @@ async function api(req, res, url) {
       const s = await P.getSettings(project);
       const main = await P.detectMain(project, s);
       const full = main && path.join(P.projectDir(project), P.jobname(main) + '.pdf');
-      if (!full || !fs.existsSync(full)) throw new HttpError(404, 'PDF ainda não gerado');
+      if (!full || !fs.existsSync(full)) throw new HttpError(404, t('server.http.noPdf'));
       const h = { 'Content-Type': 'application/pdf' };
       if (q('download') === '1') {
         const base = P.jobname(main) || 'documento';
@@ -149,34 +150,34 @@ async function api(req, res, url) {
     case 'synctex':
       if (sub2 === 'forward') return sendJson(res, 200, await synctexForward(project, q('file'), q('line'), q('col')));
       if (sub2 === 'backward') return sendJson(res, 200, await synctexBackward(project, q('page'), q('x'), q('y')));
-      throw new HttpError(404, 'Rota inexistente');
+      throw new HttpError(404, t('server.http.noRoute'));
 
     default:
-      throw new HttpError(404, 'Rota inexistente');
+      throw new HttpError(404, t('server.http.noRoute'));
   }
 }
 
 // ---------- TeX Live packages (tlmgr) ----------
 async function tlmgrApi(req, res, url, sub, m) {
   // also required on GET: these routes hit the network and can install software
-  if (req.headers['x-latexide'] !== '1') throw new HttpError(403, 'Requisição não autorizada');
+  if (req.headers['x-latexide'] !== '1') throw new HttpError(403, t('server.http.unauthorized'));
   const q = k => url.searchParams.get(k);
   if (sub === 'status' && m === 'GET') return sendJson(res, 200, tlmgr.status());
   if (sub === 'search' && m === 'GET') return sendJson(res, 200, await tlmgr.search(q('q'), q('file') === '1'));
   if (sub === 'install' && m === 'POST') { const b = await readJson(req); tlmgr.install(b.packages); return sendJson(res, 202, { ok: true }); }
   if (sub === 'stop' && m === 'POST') { tlmgr.stop(); return sendJson(res, 200, { ok: true }); }
-  throw new HttpError(404, 'Rota inexistente');
+  throw new HttpError(404, t('server.http.noRoute'));
 }
 
 // ---------- static files ----------
 async function serveStatic(req, res, url) {
-  if (req.method !== 'GET' && req.method !== 'HEAD') throw new HttpError(405, 'Método não permitido');
+  if (req.method !== 'GET' && req.method !== 'HEAD') throw new HttpError(405, t('server.http.methodNotAllowed'));
   let p;
-  try { p = decodeURIComponent(url.pathname); } catch { throw new HttpError(400, 'URL inválida'); }
+  try { p = decodeURIComponent(url.pathname); } catch { throw new HttpError(400, t('server.http.invalidUrl')); }
   if (p.endsWith('/')) p += 'index.html';
   const full = path.normalize(path.join(cfg.PUBLIC_DIR, p));
-  if (!full.startsWith(cfg.PUBLIC_DIR + path.sep)) throw new HttpError(403, 'Proibido');
-  if (!fs.existsSync(full)) throw new HttpError(404, 'Não encontrado');
+  if (!full.startsWith(cfg.PUBLIC_DIR + path.sep)) throw new HttpError(403, t('server.http.forbidden'));
+  if (!fs.existsSync(full)) throw new HttpError(404, t('server.http.notFound'));
   const ext = path.extname(full).toLowerCase();
   const h = { 'Content-Type': MIME[ext] || 'application/octet-stream', 'Cache-Control': 'no-cache' };
   if (ext === '.html') h['Content-Security-Policy'] = CSP;
@@ -186,7 +187,7 @@ async function serveStatic(req, res, url) {
 
 const server = http.createServer(async (req, res) => {
   try {
-    if (!hostOk(req)) throw new HttpError(403, 'Host não permitido');
+    if (!hostOk(req)) throw new HttpError(403, t('server.http.hostNotAllowed'));
     const url = new URL(req.url, 'http://localhost');
     if (url.pathname.startsWith('/api/')) await api(req, res, url);
     else await serveStatic(req, res, url);
@@ -265,7 +266,7 @@ async function main() {
   if (!res.tools.texlab.found) console.log('\n[!] TexLab not found: no LSP autocomplete/diagnostics. Install it with:\n    ' + res.tools.texlab.hintEn);
   if (!fs.existsSync(path.join(cfg.PUBLIC_DIR, 'app.js'))) console.log('\n[!] Frontend not built yet. Run: npm run build');
   await fs.promises.mkdir(cfg.PROJECTS_DIR, { recursive: true });
-  if (!(await P.listProjects()).length) { await P.createProject('exemplo'); console.log('\nExample project created at ' + path.join(cfg.PROJECTS_DIR, 'exemplo')); }
+  if (!(await P.listProjects()).length) { await P.createProject(t('server.exampleProject')); console.log('\nExample project created at ' + path.join(cfg.PROJECTS_DIR, t('server.exampleProject'))); }
   server.on('error', e => {
     console.error(e.code === 'EADDRINUSE' ? `\nPort ${cfg.PORT} is already in use. Pick another one: PORT=3001 ./start.sh` : e);
     process.exit(1);

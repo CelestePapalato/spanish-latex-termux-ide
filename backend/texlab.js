@@ -4,6 +4,7 @@ const path = require('path');
 const { pathToFileURL, fileURLToPath } = require('url');
 const { which } = require('./doctor');
 const P = require('./projects');
+const { t } = require('./i18n');
 
 const REQ_OK = new Set(['textDocument/completion', 'textDocument/hover', 'textDocument/definition', 'textDocument/references', 'textDocument/documentSymbol', 'textDocument/documentLink', 'textDocument/foldingRange', 'textDocument/documentHighlight', 'textDocument/codeAction', 'textDocument/formatting']);
 const NOTIFY_OK = new Set(['textDocument/didOpen', 'textDocument/didChange', 'textDocument/didClose', 'textDocument/didSave']);
@@ -20,18 +21,18 @@ class TexlabSession {
   start() {
     const bin = which('texlab');
     if (!bin) { this.emit({ type: 'texlab_unavailable', project: this.project, hint: 'pkg install texlab' }); return false; }
-    const proc = this.proc = spawn(bin, [], { cwd: this.root, stdio: ['pipe', 'pipe', 'pipe'] });
+    const proc = this.proc = spawn(bin, [], { cwd: this.root, stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true });
     proc.stdin.on('error', () => {});
     proc.stderr.on('data', () => {});
     proc.stdout.on('data', d => this._onData(d));
     proc.on('error', e => { this.ready = false; this.emit({ type: 'texlab_unavailable', project: this.project, hint: e.message }); });
     proc.on('exit', () => {
       this.ready = false; this.proc = null;
-      for (const p of this.pending.values()) { clearTimeout(p.t); p.reject(new Error('TexLab encerrou')); }
+      for (const p of this.pending.values()) { clearTimeout(p.t); p.reject(new Error(t('server.texlab.exited'))); }
       this.pending.clear();
       if (!this.stopping) this.emit({ type: 'texlab_stopped', project: this.project });
     });
-    this._init().catch(e => this.emit({ type: 'texlab_unavailable', project: this.project, hint: `Falha ao iniciar o TexLab: ${e.message}` }));
+    this._init().catch(e => this.emit({ type: 'texlab_unavailable', project: this.project, hint: t('server.texlab.startError', { error: e.message }) }));
     return true;
   }
 
@@ -67,10 +68,10 @@ class TexlabSession {
 
   request(method, params, ms = 10000) {
     return new Promise((resolve, reject) => {
-      if (!this.proc) return reject(new Error('TexLab não está em execução'));
+      if (!this.proc) return reject(new Error(t('server.texlab.notRunning')));
       const id = this.nextId++;
-      const t = setTimeout(() => { this.pending.delete(id); reject(new Error('tempo esgotado')); }, ms);
-      this.pending.set(id, { resolve, reject, t });
+      const timer = setTimeout(() => { this.pending.delete(id); reject(new Error(t('server.texlab.timeout'))); }, ms);
+      this.pending.set(id, { resolve, reject, t: timer });
       this._send({ jsonrpc: '2.0', id, method, params });
     });
   }
@@ -97,7 +98,7 @@ class TexlabSession {
       const p = this.pending.get(msg.id);
       if (!p) return;
       this.pending.delete(msg.id); clearTimeout(p.t);
-      msg.error ? p.reject(new Error(msg.error.message || 'erro LSP')) : p.resolve(msg.result);
+      msg.error ? p.reject(new Error(msg.error.message || t('server.texlab.lspError'))) : p.resolve(msg.result);
     } else if (msg.id != null) { // server-to-client request
       let result = null;
       if (msg.method === 'workspace/configuration') result = (msg.params.items || []).map(() => ({}));
@@ -134,7 +135,7 @@ class TexlabManager {
   stop() { if (this.session) this.session.stop(); this.session = null; }
 
   async request(method, params) {
-    if (!REQ_OK.has(method)) throw new Error('Método LSP não permitido');
+    if (!REQ_OK.has(method)) throw new Error(t('server.texlab.methodNotAllowed'));
     if (!this.session || !this.session.ready) return null;
     return this.session.request(method, params);
   }

@@ -9,6 +9,7 @@ import { lintGutter, lintKeymap, setDiagnostics } from '@codemirror/lint';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { localComplete } from './completions.js';
 import { uiTheme } from './cm-theme.js';
+import { t } from './i18n.js';
 
 const latex = StreamLanguage.define(stex);
 const latexData = latex.data.of({ commentTokens: { line: '%' }, closeBrackets: { brackets: ['(', '[', '{', '$'] } });
@@ -128,14 +129,14 @@ export function createEditor(parent, { lsp, hooks }) {
     if (!cur) return;
     flush();
     const locs = normLocs(await lsp.request('textDocument/definition', { textDocument: lsp.td(cur), position: pos() }));
-    if (!locs.length) return hooks.toast('Definição não encontrada');
-    locs.length === 1 ? go(locs[0]) : hooks.list('Definições', locs.map(locItem));
+    if (!locs.length) return hooks.toast(t('editor.noDefinition'));
+    locs.length === 1 ? go(locs[0]) : hooks.list(t('editor.definitions'), locs.map(locItem));
   }
   async function references() {
     if (!cur) return;
     flush();
     const locs = normLocs(await lsp.request('textDocument/references', { textDocument: lsp.td(cur), position: pos(), context: { includeDeclaration: true } }));
-    hooks.list('Referências', locs.map(locItem));
+    hooks.list(t('editor.references'), locs.map(locItem));
   }
   async function outline() {
     if (!cur) return;
@@ -148,14 +149,14 @@ export function createEditor(parent, { lsp, hooks }) {
       if (s.children) walk(s.children, d + 1);
     } };
     walk(r, 0);
-    hooks.list('Estrutura do documento', items);
+    hooks.list(t('editor.outline'), items);
   }
   async function hoverNow() {
     if (!cur) return;
     flush();
     const r = await lsp.request('textDocument/hover', { textDocument: lsp.td(cur), position: pos() });
-    const t = r && mdText(r.contents).trim();
-    t ? hooks.info('Informação', t) : hooks.toast('Sem informação neste ponto');
+    const text = r && mdText(r.contents).trim();
+    text ? hooks.info(t('editor.info'), text) : hooks.toast(t('editor.noInfo'));
   }
 
   return {

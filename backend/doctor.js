@@ -1,33 +1,39 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
+const { t } = require('./i18n');
 
 // Looks a command up in PATH (no shell involved).
+// On Windows, programs end in .exe (pdflatex.exe, texlab.exe...). Only .exe is tried:
+// .bat/.cmd files (e.g. tlmgr.bat) cannot be spawned without a shell, so they are treated as missing.
+const EXTS = process.platform === 'win32' ? ['.exe', ''] : [''];
 function which(cmd) {
   for (const dir of (process.env.PATH || '').split(path.delimiter)) {
     if (!dir) continue;
-    const p = path.join(dir, cmd);
-    try { fs.accessSync(p, fs.constants.X_OK); if (fs.statSync(p).isFile()) return p; } catch {}
+    for (const ext of EXTS) {
+      const p = path.join(dir, cmd + ext);
+      try { fs.accessSync(p, fs.constants.X_OK); if (fs.statSync(p).isFile()) return p; } catch {}
+    }
   }
   return null;
 }
 
 // Each tool has two hints:
-//   hint   - Brazilian Portuguese, shown inside the IDE (the IDE interface is pt-BR)
+//   hint   - shown inside the IDE, translated (public/locales/<lang>.json → server.doctor)
 //   hintEn - English, printed in the terminal by `npm run doctor` and at server startup
-const TEX = 'bash scripts/install-texlive.sh   (instala o TeX Live mínimo; depois: source $PREFIX/etc/profile.d/texlive.sh)';
+const TEX = t('server.doctor.texlive');
 const TEX_EN = 'bash scripts/install-texlive.sh   (installs minimal TeX Live; then: source $PREFIX/etc/profile.d/texlive.sh)';
 const TOOLS = [
   { name: 'pdflatex', level: 'required', hint: TEX, hintEn: TEX_EN },
   { name: 'xelatex', level: 'optional', hint: 'tlmgr install xetex', hintEn: 'tlmgr install xetex' },
   { name: 'lualatex', level: 'optional', hint: 'tlmgr install luatex lualatex-math', hintEn: 'tlmgr install luatex lualatex-math' },
   { name: 'bibtex', level: 'optional', hint: TEX, hintEn: TEX_EN },
-  { name: 'biber', level: 'optional', hint: 'pode não existir para Android; use bibtex/natbib', hintEn: 'may not exist for Android; use bibtex/natbib' },
+  { name: 'biber', level: 'optional', hint: t('server.doctor.biber'), hintEn: 'may not exist for Android; use bibtex/natbib' },
   { name: 'makeindex', level: 'optional', hint: TEX, hintEn: TEX_EN },
-  { name: 'makeglossaries', level: 'optional', hint: 'tlmgr install glossaries   (requer: pkg install perl)', hintEn: 'tlmgr install glossaries   (requires: pkg install perl)' },
+  { name: 'makeglossaries', level: 'optional', hint: t('server.doctor.makeglossaries'), hintEn: 'tlmgr install glossaries   (requires: pkg install perl)' },
   { name: 'synctex', level: 'optional', hint: TEX, hintEn: TEX_EN },
   { name: 'texlab', level: 'recommended', hint: 'pkg install texlab', hintEn: 'pkg install texlab' },
-  { name: 'tlmgr', level: 'optional', hint: TEX + ' — o tlmgr acompanha o TeX Live e permite instalar pacotes pela IDE', hintEn: TEX_EN + ' — tlmgr ships with TeX Live and lets the IDE install packages' },
+  { name: 'tlmgr', level: 'optional', hint: TEX + ' — ' + t('server.doctor.tlmgr'), hintEn: TEX_EN + ' — tlmgr ships with TeX Live and lets the IDE install packages' },
 ];
 
 function check() {

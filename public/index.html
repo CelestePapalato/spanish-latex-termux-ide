@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="pt-BR" data-theme="dark">
+<html lang="es" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
@@ -15,58 +15,58 @@
 </head>
 <body>
 <header id="topbar">
-  <button id="btn-home" class="logo" title="Projetos" aria-label="Projetos: criar novo ou abrir existente">
+  <button id="btn-home" class="logo" data-i18n-title="topbar.projects" data-i18n-aria-label="topbar.projectsAria">
     <svg class="flame" viewBox="0 0 64 64" width="28" height="28" aria-hidden="true"><path fill="#ED254E" d="M32.5 3C33 14 41 19 46.5 27C52 35 52.5 43 48.5 50C44.5 57 38 61 31.5 61C23 61 15.5 56 12.5 48.5C9.5 41 12 33 17 28C17.5 33 20.5 36 23 36C22 28 24 20 29 13C30.5 10.5 32 7 32.5 3Z"/><path fill="#fff" fill-opacity=".92" d="M31.5 58C26 58 21.5 54 21.5 48.5C21.5 43 26 40 29 35C30.5 38 33 39.5 35 42C37.5 45 38 48 37 51.5C35.8 55.5 34 58 31.5 58Z"/></svg>
     <span class="brand">LaTeX<b>IDE</b></span>
   </button>
-  <button id="btn-side" class="ib" title="Arquivos do projeto" aria-label="Mostrar/ocultar arquivos"><i data-i="panel-left"></i></button>
-  <button id="btn-project" class="proj" title="Trocar de projeto"><span id="proj-name">—</span><i data-i="chevron-down" data-s="14"></i></button>
+  <button id="btn-side" class="ib" data-i18n-title="topbar.files" data-i18n-aria-label="topbar.toggleFiles"><i data-i="panel-left"></i></button>
+  <button id="btn-project" class="proj" data-i18n-title="topbar.switchProject"><span id="proj-name">—</span><i data-i="chevron-down" data-s="14"></i></button>
   <span class="sp"></span>
   <span id="status" class="status"></span>
-  <div id="viewseg" role="group" aria-label="Visualização">
-    <button data-view="editor" title="Só o editor" aria-label="Só o editor"><i data-i="pencil" data-s="16"></i></button>
-    <button data-view="split" class="wide" title="Editor e PDF lado a lado" aria-label="Editor e PDF lado a lado"><i data-i="columns" data-s="16"></i></button>
-    <button data-view="pdf" title="Só o PDF" aria-label="Só o PDF"><i data-i="eye" data-s="16"></i></button>
+  <div id="viewseg" role="group" data-i18n-aria-label="topbar.view">
+    <button data-view="editor" data-i18n-title="topbar.editorOnly" data-i18n-aria-label="topbar.editorOnly"><i data-i="pencil" data-s="16"></i></button>
+    <button data-view="split" class="wide" data-i18n-title="topbar.split" data-i18n-aria-label="topbar.split"><i data-i="columns" data-s="16"></i></button>
+    <button data-view="pdf" data-i18n-title="topbar.pdfOnly" data-i18n-aria-label="topbar.pdfOnly"><i data-i="eye" data-s="16"></i></button>
   </div>
-  <button id="btn-compile" class="primary" title="Compilar (Ctrl+Enter)"><i data-i="play" data-s="16" class="i-play"></i><i data-i="loader" data-s="16" class="i-spin"></i><span class="lbl">Compilar</span></button>
-  <button id="btn-logs" class="ib" title="Logs e problemas" aria-label="Logs e problemas" aria-expanded="false"><i data-i="terminal"></i><span id="logs-badge" class="badge" hidden></span></button>
-  <button id="btn-menu" class="ib" title="Mais opções" aria-label="Mais opções" aria-expanded="false" aria-haspopup="true"><i data-i="ellipsis"></i></button>
+  <button id="btn-compile" class="primary" data-i18n-title="topbar.compileTitle"><i data-i="play" data-s="16" class="i-play"></i><i data-i="loader" data-s="16" class="i-spin"></i><span class="lbl" data-i18n="topbar.compile"></span></button>
+  <button id="btn-logs" class="ib" data-i18n-title="logs.title" data-i18n-aria-label="logs.title" aria-expanded="false"><i data-i="terminal"></i><span id="logs-badge" class="badge" hidden></span></button>
+  <button id="btn-menu" class="ib" data-i18n-title="topbar.more" data-i18n-aria-label="topbar.more" aria-expanded="false" aria-haspopup="true"><i data-i="ellipsis"></i></button>
 </header>
 
 <div id="menu" hidden role="menu">
-  <label class="m-field">Compilador
+  <label class="m-field"><span data-i18n="menu.compiler"></span>
     <select id="compiler-select">
       <option value="pdflatex">pdfLaTeX</option>
       <option value="xelatex">XeLaTeX</option>
       <option value="lualatex">LuaLaTeX</option>
     </select>
   </label>
-  <label class="m-row switch" title="Compilar automaticamente ao editar"><span>Compilar automaticamente</span><input type="checkbox" id="auto-compile" class="tgl"></label>
+  <label class="m-row switch" data-i18n-title="menu.autoCompileTitle"><span data-i18n="menu.autoCompile"></span><input type="checkbox" id="auto-compile" class="tgl"></label>
   <hr>
-  <button class="m-item" id="m-download"><i data-i="download" data-s="18"></i>Baixar PDF</button>
-  <button class="m-item" id="m-packages"><i data-i="package" data-s="18"></i>Pacotes TeX Live</button>
-  <button class="m-item" id="m-theme"><i data-i="moon" data-s="18" id="m-theme-ico"></i><span id="m-theme-lbl">Tema</span></button>
-  <button class="m-item" id="btn-settings"><i data-i="settings" data-s="18"></i>Configurações</button>
+  <button class="m-item" id="m-download"><i data-i="download" data-s="18"></i><span data-i18n="menu.downloadPdf"></span></button>
+  <button class="m-item" id="m-packages"><i data-i="package" data-s="18"></i><span data-i18n="menu.packages"></span></button>
+  <button class="m-item" id="m-theme"><i data-i="moon" data-s="18" id="m-theme-ico"></i><span id="m-theme-lbl" data-i18n="menu.theme"></span></button>
+  <button class="m-item" id="btn-settings"><i data-i="settings" data-s="18"></i><span data-i18n="menu.settings"></span></button>
   <hr>
-  <div class="m-row"><span>Servidor de linguagem</span><span id="lsp-status" class="pill" title="TexLab">TexLab: —</span></div>
+  <div class="m-row"><span data-i18n="menu.languageServer"></span><span id="lsp-status" class="pill" title="TexLab">TexLab: —</span></div>
 </div>
 
 <div id="banner" hidden>
   <button id="banner-sum" aria-expanded="false"><i data-i="alert" data-s="16"></i><span id="banner-txt"></span><i data-i="chevron-down" data-s="14"></i></button>
-  <button id="banner-x" class="ib sm" title="Dispensar" aria-label="Dispensar aviso"><i data-i="x" data-s="16"></i></button>
+  <button id="banner-x" class="ib sm" data-i18n-title="banner.dismiss" data-i18n-aria-label="banner.dismissAria"><i data-i="x" data-s="16"></i></button>
   <pre id="banner-detail" hidden></pre>
 </div>
 
 <main id="layout" data-view="split" data-side="closed">
   <div id="side-backdrop"></div>
-  <section id="pane-files" class="pane" aria-label="Arquivos">
+  <section id="pane-files" class="pane" data-i18n-aria-label="files.title">
     <div class="side-head">
-      <span class="side-title" id="side-title">Arquivos</span>
-      <button id="f-new" class="ib sm" title="Novo arquivo" aria-label="Novo arquivo"><i data-i="file-plus" data-s="16"></i></button>
-      <button id="f-dir" class="ib sm" title="Nova pasta" aria-label="Nova pasta"><i data-i="folder-plus" data-s="16"></i></button>
-      <button id="f-up" class="ib sm" title="Importar arquivos" aria-label="Importar arquivos"><i data-i="upload" data-s="16"></i></button>
-      <button id="f-refresh" class="ib sm" title="Atualizar" aria-label="Atualizar"><i data-i="refresh" data-s="16"></i></button>
-      <button id="f-close" class="ib sm" title="Fechar" aria-label="Fechar painel"><i data-i="x" data-s="16"></i></button>
+      <span class="side-title" id="side-title" data-i18n="files.title"></span>
+      <button id="f-new" class="ib sm" data-i18n-title="files.newFile" data-i18n-aria-label="files.newFile"><i data-i="file-plus" data-s="16"></i></button>
+      <button id="f-dir" class="ib sm" data-i18n-title="files.newFolder" data-i18n-aria-label="files.newFolder"><i data-i="folder-plus" data-s="16"></i></button>
+      <button id="f-up" class="ib sm" data-i18n-title="files.import" data-i18n-aria-label="files.import"><i data-i="upload" data-s="16"></i></button>
+      <button id="f-refresh" class="ib sm" data-i18n-title="files.refresh" data-i18n-aria-label="files.refresh"><i data-i="refresh" data-s="16"></i></button>
+      <button id="f-close" class="ib sm" data-i18n-title="common.close" data-i18n-aria-label="files.closePanel"><i data-i="x" data-s="16"></i></button>
       <input type="file" id="f-input" multiple hidden>
     </div>
     <ul id="tree"></ul>
@@ -76,14 +76,14 @@
     <div id="file-tabs"></div>
     <div id="editor"></div>
     <div id="qk" data-open="false">
-      <button id="qk-toggle" aria-expanded="false" title="Teclas rápidas"><i data-i="keyboard" data-s="16"></i><span>Teclas rápidas</span><i data-i="chevron-up" data-s="14" class="qk-chev"></i></button>
+      <button id="qk-toggle" aria-expanded="false" data-i18n-title="quickkeys.title"><i data-i="keyboard" data-s="16"></i><span data-i18n="quickkeys.title"></span><i data-i="chevron-up" data-s="14" class="qk-chev"></i></button>
       <div id="quickkeys">
         <button data-ins="\">\</button><button data-ins="{}">{ }</button><button data-ins="[]">[ ]</button><button data-ins="$$">$</button>
         <button data-ins="&amp;">&amp;</button><button data-ins="_">_</button><button data-ins="^">^</button><button data-ins="%">%</button><button data-ins="~">~</button>
-        <button data-ins="  ">Tab</button><button data-cmd="left" aria-label="Esquerda"><i data-i="arrow-left" data-s="16"></i></button><button data-cmd="right" aria-label="Direita"><i data-i="arrow-right" data-s="16"></i></button>
-        <button data-cmd="undo" aria-label="Desfazer"><i data-i="undo" data-s="16"></i></button><button data-cmd="redo" aria-label="Refazer"><i data-i="redo" data-s="16"></i></button>
-        <button data-cmd="complete"><i data-i="sparkles" data-s="16"></i>Completar</button><button data-cmd="hover"><i data-i="info" data-s="16"></i>Info</button><button data-cmd="def"><i data-i="link" data-s="16"></i>Definição</button>
-        <button data-cmd="refs"><i data-i="list" data-s="16"></i>Refs</button><button data-cmd="outline"><i data-i="list" data-s="16"></i>Estrutura</button><button data-cmd="search"><i data-i="search" data-s="16"></i>Buscar</button><button data-cmd="sync"><i data-i="external" data-s="16"></i>Ir ao PDF</button>
+        <button data-ins="  ">Tab</button><button data-cmd="left" data-i18n-aria-label="quickkeys.left"><i data-i="arrow-left" data-s="16"></i></button><button data-cmd="right" data-i18n-aria-label="quickkeys.right"><i data-i="arrow-right" data-s="16"></i></button>
+        <button data-cmd="undo" data-i18n-aria-label="quickkeys.undo"><i data-i="undo" data-s="16"></i></button><button data-cmd="redo" data-i18n-aria-label="quickkeys.redo"><i data-i="redo" data-s="16"></i></button>
+        <button data-cmd="complete"><i data-i="sparkles" data-s="16"></i><span data-i18n="quickkeys.complete"></span></button><button data-cmd="hover"><i data-i="info" data-s="16"></i><span data-i18n="quickkeys.info"></span></button><button data-cmd="def"><i data-i="link" data-s="16"></i><span data-i18n="quickkeys.definition"></span></button>
+        <button data-cmd="refs"><i data-i="list" data-s="16"></i><span data-i18n="quickkeys.refs"></span></button><button data-cmd="outline"><i data-i="list" data-s="16"></i><span data-i18n="quickkeys.outline"></span></button><button data-cmd="search"><i data-i="search" data-s="16"></i><span data-i18n="quickkeys.search"></span></button><button data-cmd="sync"><i data-i="external" data-s="16"></i><span data-i18n="quickkeys.toPdf"></span></button>
       </div>
     </div>
   </section>
@@ -91,36 +91,36 @@
   <section id="pane-pdf" class="pane">
     <div id="pdf-head">
       <i data-i="file-text" data-s="16" class="pdf-ico"></i>
-      <input id="pdf-page" type="number" min="1" value="1" inputmode="numeric" aria-label="Página"><span id="pdf-total">/ –</span>
+      <input id="pdf-page" type="number" min="1" value="1" inputmode="numeric" data-i18n-aria-label="pdf.page"><span id="pdf-total">/ –</span>
       <span id="pdf-info" class="status"></span>
       <span class="sp"></span>
-      <button id="pdf-download" class="ib sm" title="Baixar PDF" aria-label="Baixar PDF"><i data-i="download" data-s="18"></i></button>
-      <button id="pdf-tools-toggle" class="ib sm" title="Zoom, navegação e busca" aria-label="Ferramentas do PDF" aria-expanded="false"><i data-i="sliders" data-s="18"></i></button>
+      <button id="pdf-download" class="ib sm" data-i18n-title="pdf.download" data-i18n-aria-label="pdf.download"><i data-i="download" data-s="18"></i></button>
+      <button id="pdf-tools-toggle" class="ib sm" data-i18n-title="pdf.tools" data-i18n-aria-label="pdf.toolsAria" aria-expanded="false"><i data-i="sliders" data-s="18"></i></button>
     </div>
     <div id="pdf-toolbar" hidden>
-      <button id="pdf-prev" class="ib sm" title="Página anterior" aria-label="Página anterior"><i data-i="chevron-left" data-s="16"></i></button>
-      <button id="pdf-next" class="ib sm" title="Próxima página" aria-label="Próxima página"><i data-i="chevron-right" data-s="16"></i></button>
-      <button id="pdf-out" class="ib sm" title="Reduzir" aria-label="Reduzir"><i data-i="minus" data-s="16"></i></button>
-      <select id="pdf-zoom" aria-label="Zoom">
-        <option value="width">Largura</option><option value="page">Página</option>
+      <button id="pdf-prev" class="ib sm" data-i18n-title="pdf.prev" data-i18n-aria-label="pdf.prev"><i data-i="chevron-left" data-s="16"></i></button>
+      <button id="pdf-next" class="ib sm" data-i18n-title="pdf.next" data-i18n-aria-label="pdf.next"><i data-i="chevron-right" data-s="16"></i></button>
+      <button id="pdf-out" class="ib sm" data-i18n-title="pdf.zoomOut" data-i18n-aria-label="pdf.zoomOut"><i data-i="minus" data-s="16"></i></button>
+      <select id="pdf-zoom" data-i18n-aria-label="pdf.zoom">
+        <option value="width" data-i18n="pdf.fitWidth"></option><option value="page" data-i18n="pdf.fitPage"></option>
         <option value="0.5">50%</option><option value="0.75">75%</option><option value="1">100%</option>
         <option value="1.25">125%</option><option value="1.5">150%</option><option value="2">200%</option><option value="3">300%</option>
         <option value="custom" hidden>—</option>
       </select>
-      <button id="pdf-in" class="ib sm" title="Ampliar" aria-label="Ampliar"><i data-i="plus" data-s="16"></i></button>
-      <input id="pdf-find" type="search" placeholder="Buscar no PDF" aria-label="Buscar no PDF"><button id="pdf-find-btn" class="ib sm" title="Buscar" aria-label="Buscar"><i data-i="search" data-s="16"></i></button>
+      <button id="pdf-in" class="ib sm" data-i18n-title="pdf.zoomIn" data-i18n-aria-label="pdf.zoomIn"><i data-i="plus" data-s="16"></i></button>
+      <input id="pdf-find" type="search" data-i18n-placeholder="pdf.find" data-i18n-aria-label="pdf.find"><button id="pdf-find-btn" class="ib sm" data-i18n-title="common.search" data-i18n-aria-label="common.search"><i data-i="search" data-s="16"></i></button>
     </div>
     <div id="pdf-scroll"><div id="pdf-pages"></div><div id="pdf-msg"></div></div>
   </section>
 </main>
 
-<section id="logs" hidden aria-label="Logs">
+<section id="logs" hidden data-i18n-aria-label="logs.aria">
   <div class="bar">
-    <button data-lt="problems" class="active">Problemas</button><button data-lt="output">Saída</button>
+    <button data-lt="problems" class="active" data-i18n="logs.problems"></button><button data-lt="output" data-i18n="logs.output"></button>
     <span class="sp"></span>
-    <button data-filter="all" class="active">Tudo</button><button data-filter="error">Erros</button><button data-filter="warning">Avisos</button>
-    <button id="btn-stop" title="Cancelar compilação"><i data-i="square" data-s="14"></i>Parar</button>
-    <button id="logs-close" class="ib sm" title="Recolher logs" aria-label="Recolher logs"><i data-i="chevron-down" data-s="18"></i></button>
+    <button data-filter="all" class="active" data-i18n="logs.all"></button><button data-filter="error" data-i18n="logs.errors"></button><button data-filter="warning" data-i18n="logs.warnings"></button>
+    <button id="btn-stop" data-i18n-title="logs.stopTitle"><i data-i="square" data-s="14"></i><span data-i18n="logs.stop"></span></button>
+    <button id="logs-close" class="ib sm" data-i18n-title="logs.collapse" data-i18n-aria-label="logs.collapse"><i data-i="chevron-down" data-s="18"></i></button>
   </div>
   <div id="problems"></div>
   <pre id="output" hidden></pre>
@@ -129,59 +129,59 @@
 <dialog id="home" aria-labelledby="home-title">
   <header class="home-head">
     <svg class="flame" viewBox="0 0 64 64" width="44" height="44" aria-hidden="true"><path fill="#ED254E" d="M32.5 3C33 14 41 19 46.5 27C52 35 52.5 43 48.5 50C44.5 57 38 61 31.5 61C23 61 15.5 56 12.5 48.5C9.5 41 12 33 17 28C17.5 33 20.5 36 23 36C22 28 24 20 29 13C30.5 10.5 32 7 32.5 3Z"/><path fill="#fff" fill-opacity=".92" d="M31.5 58C26 58 21.5 54 21.5 48.5C21.5 43 26 40 29 35C30.5 38 33 39.5 35 42C37.5 45 38 48 37 51.5C35.8 55.5 34 58 31.5 58Z"/></svg>
-    <div><h2 id="home-title">LaTeX<b>IDE</b></h2><p>Crie um projeto novo ou continue de onde parou.</p></div>
-    <button id="home-close" class="ib sm" title="Fechar" aria-label="Fechar"><i data-i="x" data-s="18"></i></button>
+    <div><h2 id="home-title">LaTeX<b>IDE</b></h2><p data-i18n="home.subtitle"></p></div>
+    <button id="home-close" class="ib sm" data-i18n-title="common.close" data-i18n-aria-label="common.close"><i data-i="x" data-s="18"></i></button>
   </header>
   <div class="home-body">
     <details id="new-box" open>
-      <summary><i data-i="plus" data-s="16"></i>Novo projeto</summary>
+      <summary><i data-i="plus" data-s="16"></i><span data-i18n="home.newProject"></span></summary>
       <form id="new-form" autocomplete="off">
-        <input id="new-name" placeholder="Nome do projeto, ex.: relatorio-fisico-quimica" maxlength="64" aria-label="Nome do novo projeto" spellcheck="false" autocapitalize="off">
-        <button class="primary" type="submit"><i data-i="plus" data-s="16"></i>Criar</button>
+        <input id="new-name" data-i18n-placeholder="home.namePlaceholder" maxlength="64" data-i18n-aria-label="home.nameAria" spellcheck="false" autocapitalize="off">
+        <button class="primary" type="submit"><i data-i="plus" data-s="16"></i><span data-i18n="home.create"></span></button>
       </form>
-      <p class="hint">Letras, números, espaço, ponto, hífen e sublinhado. O projeto já nasce com um <code>main.tex</code>.</p>
+      <p class="hint" data-i18n-html="home.nameHint"></p>
     </details>
     <section>
-      <div class="list-head"><h3>Seus projetos <span id="home-count" class="count"></span></h3><input id="home-filter" type="search" placeholder="Filtrar" aria-label="Filtrar projetos" hidden></div>
+      <div class="list-head"><h3><span data-i18n="home.yourProjects"></span> <span id="home-count" class="count"></span></h3><input id="home-filter" type="search" data-i18n-placeholder="home.filter" data-i18n-aria-label="home.filterAria" hidden></div>
       <ul id="home-list"></ul>
     </section>
   </div>
 </dialog>
 
 <dialog id="pkgs" aria-labelledby="pkgs-title">
-  <h3 id="pkgs-title"><i data-i="package" data-s="20"></i>Pacotes TeX Live</h3>
+  <h3 id="pkgs-title"><i data-i="package" data-s="20"></i><span data-i18n="packages.title"></span></h3>
   <p id="pkg-unavail" class="hint" hidden></p>
   <form id="pkg-form">
-    <input id="pkg-q" type="search" placeholder="Pacote ou arquivo, ex.: chemfig ou siunitx.sty" aria-label="Buscar pacote" autocomplete="off" spellcheck="false" autocapitalize="off">
-    <button class="primary" type="submit"><i data-i="search" data-s="16"></i>Buscar</button>
+    <input id="pkg-q" type="search" data-i18n-placeholder="packages.placeholder" data-i18n-aria-label="packages.searchAria" autocomplete="off" spellcheck="false" autocapitalize="off">
+    <button class="primary" type="submit"><i data-i="search" data-s="16"></i><span data-i18n="common.search"></span></button>
   </form>
-  <label class="chk"><input id="pkg-file" type="checkbox"> Procurar pelo nome de um arquivo (.sty, .cls, .def…)</label>
+  <label class="chk"><input id="pkg-file" type="checkbox"> <span data-i18n="packages.byFile"></span></label>
   <div id="pkg-results" aria-live="polite"></div>
-  <details id="pkg-logbox"><summary>Saída da instalação</summary><pre id="pkg-log"></pre></details>
-  <div class="row"><button id="pkg-stop" hidden><i data-i="square" data-s="14"></i>Cancelar instalação</button><button id="pkg-close">Fechar</button></div>
+  <details id="pkg-logbox"><summary data-i18n="packages.installLog"></summary><pre id="pkg-log"></pre></details>
+  <div class="row"><button id="pkg-stop" hidden><i data-i="square" data-s="14"></i><span data-i18n="packages.cancel"></span></button><button id="pkg-close" data-i18n="common.close"></button></div>
 </dialog>
 
-<dialog id="picker"><h3 id="picker-title"></h3><div id="picker-list"></div><button id="picker-close">Fechar</button></dialog>
+<dialog id="picker"><h3 id="picker-title"></h3><div id="picker-list"></div><button id="picker-close" data-i18n="common.close"></button></dialog>
 
 <dialog id="settings">
-  <h3>Configurações</h3>
+  <h3 data-i18n="settings.title"></h3>
   <details open>
-    <summary>Aparência e editor</summary>
-    <label>Tema <select id="set-theme"><option value="auto">Automático (segue o sistema)</option><option value="dark">Escuro</option><option value="light">Claro</option></select></label>
-    <label>Tamanho da fonte (px) <input id="set-font" type="number" min="10" max="28"></label>
-    <label class="chk"><input id="set-wrap" type="checkbox"> Quebra de linha</label>
+    <summary data-i18n="settings.appearance"></summary>
+    <label><span data-i18n="settings.theme"></span> <select id="set-theme"><option value="auto" data-i18n="settings.themeAuto"></option><option value="dark" data-i18n="settings.themeDark"></option><option value="light" data-i18n="settings.themeLight"></option></select></label>
+    <label><span data-i18n="settings.fontSize"></span> <input id="set-font" type="number" min="10" max="28"></label>
+    <label class="chk"><input id="set-wrap" type="checkbox"> <span data-i18n="settings.wrap"></span></label>
   </details>
   <details>
-    <summary>Compilação</summary>
-    <label>Arquivo principal <select id="set-main"></select></label>
-    <label>Atraso da compilação automática (ms) <input id="set-debounce" type="number" min="200" max="10000" step="100"></label>
-    <div class="row"><button id="set-clean">Limpar arquivos auxiliares</button></div>
+    <summary data-i18n="settings.compilation"></summary>
+    <label><span data-i18n="settings.mainFile"></span> <select id="set-main"></select></label>
+    <label><span data-i18n="settings.debounce"></span> <input id="set-debounce" type="number" min="200" max="10000" step="100"></label>
+    <div class="row"><button id="set-clean" data-i18n="settings.clean"></button></div>
   </details>
   <details class="danger">
-    <summary>Zona de perigo</summary>
-    <div class="row"><button id="set-delete"><i data-i="trash" data-s="16"></i>Excluir este projeto</button></div>
+    <summary data-i18n="settings.danger"></summary>
+    <div class="row"><button id="set-delete"><i data-i="trash" data-s="16"></i><span data-i18n="settings.deleteProject"></span></button></div>
   </details>
-  <div class="row"><button id="set-cancel">Cancelar</button><button id="set-save" class="primary">Salvar</button></div>
+  <div class="row"><button id="set-cancel" data-i18n="common.cancel"></button><button id="set-save" class="primary" data-i18n="common.save"></button></div>
 </dialog>
 <div id="toast" popover="manual" hidden role="status"></div>
 <script src="/app.js" defer></script>

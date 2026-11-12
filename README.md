@@ -3,7 +3,7 @@
 A local, Overleaf-style LaTeX IDE for **Android / Termux**. It works offline and opens at `http://127.0.0.1:3000`.
 
 > [!IMPORTANT]
-> **Interface language:** the IDE itself (menus, buttons, messages, dialogs) is in **Brazilian Portuguese (pt-BR)**.
+> **Interface language:** the IDE itself (menus, buttons, messages, dialogs) is in **Spanish (es)**. All of its texts live in `public/locales/es.json` (see [Translations](#translations)).
 > All documentation, code comments and terminal output (installer, server, `doctor`) are in English.
 
 ## Features
@@ -132,7 +132,7 @@ npm run doctor
 
 ### Optional extras
 
-LaTeX engines and tools that are **not** in `scheme-basic` can be added at any time (from the terminal, or from the IDE: menu `⋯` → "Pacotes TeX Live"):
+LaTeX engines and tools that are **not** in `scheme-basic` can be added at any time (from the terminal, or from the IDE: menu `⋯` → "Paquetes de TeX Live"):
 
 ```bash
 tlmgr install xetex
@@ -149,13 +149,13 @@ LATEXIDE_SHELL_ESCAPE=1 ./start.sh
 
 ## Using the IDE
 
-The interface is in **Brazilian Portuguese**. The labels below are the Portuguese names you will see on screen.
+The interface is in **Spanish**. The labels below are the Spanish names you will see on screen.
 
-- **Logo (flame):** opens the projects screen ("Novo projeto" and the list of existing projects, newest first).
+- **Logo (flame):** opens the projects screen ("Nuevo proyecto" and the list of existing projects, newest first).
 - **More room for code:** the logs live in a bottom drawer that is **hidden by default** (`>_` button, with an error counter). The PDF controls (zoom, navigation, search) sit behind the settings button in the PDF header, and the touch quick keys sit behind "Teclas rápidas". All three choices are remembered. The Editor / Split / PDF buttons at the top choose what fills the screen.
-- **Download PDF:** download icon in the PDF header, or menu `⋯` → "Baixar PDF".
-- **TeX Live packages:** menu `⋯` → "Pacotes TeX Live" (needs internet and `tlmgr`). Search by package name or, with the option checked, by file name (`.sty`, `.cls`). When a build fails because of a missing file, the problems panel shows "Buscar pacote para …"; after installing, the IDE recompiles.
-- **Theme:** menu `⋯` toggles light/dark; "Configurações" also has "Automático", which follows the system.
+- **Download PDF:** download icon in the PDF header, or menu `⋯` → "Descargar PDF".
+- **TeX Live packages:** menu `⋯` → "Paquetes de TeX Live" (needs internet and `tlmgr`). Search by package name or, with the option checked, by file name (`.sty`, `.cls`). When a build fails because of a missing file, the problems panel shows "Buscar paquete para …"; after installing, the IDE recompiles.
+- **Theme:** menu `⋯` toggles light/dark; "Configuración" also has "Automático", which follows the system.
 - **Files:** the first button in the top bar shows/hides the file tree. On tablets/desktops it sits next to the editor and the PDF; on phones it opens as a drawer over the editor.
 - **Autocomplete:** appears when typing `\`, inside `\begin{`, `\end{`, `\ref{`, `\cite{`, `\usepackage{`, etc. Local suggestions (commands, environments, labels, bibliography keys) appear instantly and are merged with TexLab's. `Tab`/`Enter` accept, `Ctrl+Space` forces the list.
 - Create/open projects from the sidebar and choose the main file.
@@ -164,12 +164,21 @@ The interface is in **Brazilian Portuguese**. The labels below are the Portugues
 - Double-tap the PDF for reverse SyncTeX (PDF → source).
 - Changes made outside the IDE (another editor, git) are detected and reloaded.
 
+## Translations
+
+Every text the IDE shows (interface, server error messages, install hints, autocomplete descriptions) lives in **one JSON file per language**: `public/locales/es.json`. Nothing is hard-coded in the source.
+
+- **Fixing a text:** edit the value (never the key) in `public/locales/es.json`. `{name}`-style placeholders are filled in by the app, keep them. Interface texts apply after reloading the page; texts under `"server"` need a server restart. No rebuild is needed.
+- **Where each text is used:** search for its key, e.g. `files.newFile` appears as `t('files.newFile')` in `frontend/src/*.js` or as `data-i18n="files.newFile"` (also `data-i18n-title`, `data-i18n-aria-label`, `data-i18n-placeholder`, `data-i18n-html`) in `public/index.html`.
+- **Adding a language:** copy `es.json` to e.g. `public/locales/pt-BR.json` and translate the values. Missing keys fall back to Spanish. The interface picks the language from `lang` in the `latexide-prefs` localStorage entry, then `<html lang>`; the server uses the `LATEXIDE_LANG` environment variable (`LATEXIDE_LANG=pt-BR ./start.sh`). Also add the file to `SHELL` in `public/sw.js` so it works offline.
+- **Not translated:** terminal output (installer, server startup, `npm run doctor`) and the compile log banners stay in English; LaTeX/TexLab/tlmgr messages are shown as the tools print them.
+
 ## Project structure
 
 ```text
 backend/   HTTP + WebSocket server, compiler, LSP (texlab), projects, tlmgr
-frontend/  app source code (CodeMirror, PDF.js)
-public/    served files (app.js is generated by the build; theme-init.js applies the theme before the first paint)
+frontend/  app source code (CodeMirror, PDF.js); boot.js loads the translations, i18n.js provides t()
+public/    served files (locales/<lang>.json holds all the texts; app.js is generated by the build; theme-init.js applies the theme before the first paint)
 scripts/   build, icons (make-icons.js draws the PNGs from the flame artwork) and install-texlive.sh
 ```
 
@@ -190,8 +199,8 @@ scripts/   build, icons (make-icons.js draws the PNGs from the flame artwork) an
 | `esbuild` fails on Termux | `pkg install esbuild`, then `ESBUILD_BINARY_PATH=$(command -v esbuild) npm run build` |
 | Port already in use | `PORT=3001 ./start.sh` |
 | External changes not detected | `fs.watch` may be limited on some storage locations; save from the IDE or recompile manually |
-| Missing LaTeX package (e.g. `chemfig`) | Menu `⋯` → "Pacotes TeX Live", or `tlmgr install chemfig` in the terminal. The problems panel offers a shortcut |
-| "Pacotes TeX Live" says `tlmgr` does not exist | `tlmgr` ships with TeX Live; reinstall with `bash scripts/install-texlive.sh` and load the PATH (step 4) |
+| Missing LaTeX package (e.g. `chemfig`) | Menu `⋯` → "Paquetes de TeX Live", or `tlmgr install chemfig` in the terminal. The problems panel offers a shortcut |
+| "Paquetes de TeX Live" says `tlmgr` does not exist | `tlmgr` ships with TeX Live; reinstall with `bash scripts/install-texlive.sh` and load the PATH (step 4) |
 | `biber` unavailable | It may not exist for Android; use bibtex/natbib |
 | Process killed in the background | `start.sh` uses `termux-wake-lock`; disable battery optimization for Termux |
 | TexLab missing | The editor works without LSP; install it with `pkg install texlab` |
